@@ -26,10 +26,12 @@
                 <span class="badge badge-gold">Gold: 400hrs</span>
             </h3>
             <div class="progress-bar-bg">
-                <div class="progress-bar-fill" style="width: 0%"></div>
+                <div class="progress-bar-fill" id="vps-bar" style="width: 0%"></div>
             </div>
-            <p class="progress-text">0 / 200 hours completed (Silver Goal)</p>
-            <p class="progress-text">Active months: 0 / 12 months</p>
+            <p class="progress-text" id="vps-text">0 / 200 hours completed (Silver Goal)</p>
+            <p class="progress-text" id="vps-months">Active months: 0 / 12 months</p>
+            <button class="add-btn" onclick="openModal('Voluntary Public Service')">+ Add Activity</button>
+            <div class="activity-list" id="vps-list"></div>
         </div>
 
         <!-- Personal Development -->
@@ -40,10 +42,12 @@
                 <span class="badge badge-gold">Gold: 200hrs</span>
             </h3>
             <div class="progress-bar-bg">
-                <div class="progress-bar-fill" style="width: 0%"></div>
+                <div class="progress-bar-fill" id="pd-bar" style="width: 0%"></div>
             </div>
-            <p class="progress-text">0 / 100 hours completed (Silver Goal)</p>
-            <p class="progress-text">Active months: 0 / 12 months</p>
+            <p class="progress-text" id="pd-text">0 / 100 hours completed (Silver Goal)</p>
+            <p class="progress-text" id="pd-months">Active months: 0 / 12 months</p>
+            <button class="add-btn" onclick="openModal('Personal Development')">+ Add Activity</button>
+            <div class="activity-list" id="pd-list"></div>
         </div>
 
         <!-- Physical Fitness -->
@@ -54,10 +58,12 @@
                 <span class="badge badge-gold">Gold: 200hrs</span>
             </h3>
             <div class="progress-bar-bg">
-                <div class="progress-bar-fill" style="width: 0%"></div>
+                <div class="progress-bar-fill" id="pf-bar" style="width: 0%"></div>
             </div>
-            <p class="progress-text">0 / 100 hours completed (Silver Goal)</p>
-            <p class="progress-text">Active months: 0 / 12 months</p>
+            <p class="progress-text" id="pf-text">0 / 100 hours completed (Silver Goal)</p>
+            <p class="progress-text" id="pf-months">Active months: 0 / 12 months</p>
+            <button class="add-btn" onclick="openModal('Physical Fitness')">+ Add Activity</button>
+            <div class="activity-list" id="pf-list"></div>
         </div>
 
         <!-- Expedition -->
@@ -68,13 +74,33 @@
                 <span class="badge badge-gold">Gold: 5days 4nights</span>
             </h3>
             <div class="progress-bar-bg">
-                <div class="progress-bar-fill" style="width: 0%"></div>
+                <div class="progress-bar-fill" id="exp-bar" style="width: 0%"></div>
             </div>
-            <p class="progress-text">0 days completed</p>
+            <p class="progress-text" id="exp-text">0 days completed</p>
             <p class="progress-text">Required: 3 consecutive days (Silver)</p>
+            <button class="add-btn" onclick="openModal('Expedition')">+ Add Activity</button>
+            <div class="activity-list" id="exp-list"></div>
         </div>
 
     </div>
 
+    <!-- 입력 모달창 -->
+    <div id="modal" class="modal-overlay" style="display:none">
+        <div class="modal">
+            <h3 id="modal-title">Add Activity</h3>
+            <input type="date" id="input-date" class="input-field">
+            <input type="number" id="input-hours" class="input-field" 
+                   placeholder="Hours (max 8 per day)" min="0" max="8">
+            <textarea id="input-desc" class="input-field" 
+                      placeholder="Describe your activity..." rows="3"></textarea>
+            <input type="file" id="input-photo" accept="image/*" class="input-field">
+            <div class="modal-buttons">
+                <button class="save-btn" onclick="saveActivity()">Save</button>
+                <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
 </body>
 </html>
