@@ -1,0 +1,105 @@
+/* 전체 기본 설정 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f0f4f8;
+    color: #333;
+}
+
+/* 상단 헤더 */
+header {
+    background-color: #1a3a6b;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+header h1 {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+header p {
+    font-size: 13px;
+    opacity: 0.8;
+}
+
+/* 메인 컨테이너 */
+.container {
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+/* 진행 상황 제목 */
+.section-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #1a3a6b;
+    border-bottom: 2px solid #1a3a6b;
+    padding-bottom: 8px;
+}
+
+/* 각 영역 카드 */
+.card {
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.card h3 {
+    font-size: 16px;
+    color: #1a3a6b;
+    margin-bottom: 10px;
+}
+
+/* 진행률 바 배경 */
+.progress-bar-bg {
+    background-color: #e0e0e0;
+    border-radius: 10px;
+    height: 12px;
+    margin: 8px 0;
+}
+
+/* 진행률 바 채워진 부분 */
+.progress-bar-fill {
+    background-color: #1a3a6b;
+    border-radius: 10px;
+    height: 12px;
+    width: 0%;
+}
+
+/* 시간 텍스트 */
+.progress-text {
+    font-size: 13px;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* Silver/Gold 배지 */
+.badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-left: 10px;
+}
+
+.badge-silver {
+    background-color: #C0C0C0;
+    color: white;
+}
+
+.badge-gold {
+    background-color: #FFD700;
+    color: #333;
+}

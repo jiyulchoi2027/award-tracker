@@ -4,34 +4,76 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Congressional Award Tracker</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <h1>Congressional Award Tracker</h1>
-    <p>Built by Kyle Choi — Mill Creek High School, Class of 2027</p>
+    <header>
+        <h1>Congressional Award Tracker</h1>
+        <p>Built by Kyle Choi — Mill Creek High School, Class of 2027</p>
+        <p>Track your journey. Build your story. Own your future.</p>
+    </header>
 
-    <hr>
+    <div class="container">
 
-    <h2>My Progress</h2>
+        <h2 class="section-title">My Progress</h2>
 
-    <div>
-        <h3>Voluntary Public Service</h3>
-        <p>Goal: 200 hours | Completed: 0 hours</p>
-    </div>
+        <!-- Voluntary Public Service -->
+        <div class="card">
+            <h3>
+                Voluntary Public Service
+                <span class="badge badge-silver">Silver: 200hrs</span>
+                <span class="badge badge-gold">Gold: 400hrs</span>
+            </h3>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: 0%"></div>
+            </div>
+            <p class="progress-text">0 / 200 hours completed (Silver Goal)</p>
+            <p class="progress-text">Active months: 0 / 12 months</p>
+        </div>
 
-    <div>
-        <h3>Physical Fitness</h3>
-        <p>Goal: 200 hours | Completed: 0 hours</p>
-    </div>
+        <!-- Personal Development -->
+        <div class="card">
+            <h3>
+                Personal Development
+                <span class="badge badge-silver">Silver: 100hrs</span>
+                <span class="badge badge-gold">Gold: 200hrs</span>
+            </h3>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: 0%"></div>
+            </div>
+            <p class="progress-text">0 / 100 hours completed (Silver Goal)</p>
+            <p class="progress-text">Active months: 0 / 12 months</p>
+        </div>
 
-    <div>
-        <h3>Personal Development</h3>
-        <p>Goal: 200 hours | Completed: 0 hours</p>
-    </div>
+        <!-- Physical Fitness -->
+        <div class="card">
+            <h3>
+                Physical Fitness
+                <span class="badge badge-silver">Silver: 100hrs</span>
+                <span class="badge badge-gold">Gold: 200hrs</span>
+            </h3>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: 0%"></div>
+            </div>
+            <p class="progress-text">0 / 100 hours completed (Silver Goal)</p>
+            <p class="progress-text">Active months: 0 / 12 months</p>
+        </div>
 
-    <div>
-        <h3>Expedition and Exploration</h3>
-        <p>Goal: 1 expedition | Completed: 0</p>
+        <!-- Expedition -->
+        <div class="card">
+            <h3>
+                Expedition & Exploration
+                <span class="badge badge-silver">Silver: 3days 2nights</span>
+                <span class="badge badge-gold">Gold: 5days 4nights</span>
+            </h3>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: 0%"></div>
+            </div>
+            <p class="progress-text">0 days completed</p>
+            <p class="progress-text">Required: 3 consecutive days (Silver)</p>
+        </div>
+
     </div>
 
 </body>
