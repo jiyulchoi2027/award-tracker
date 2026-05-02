@@ -2,7 +2,7 @@
 let currentCategory = '';
 
 // 각 영역별 활동 데이터
-let activities = {
+let activities = JSON.parse(localStorage.getItem('activities')) || {
     'Voluntary Public Service': [],
     'Personal Development': [],
     'Physical Fitness': [],
@@ -140,4 +140,13 @@ function updateDisplay(category) {
         `;
         listEl.appendChild(item);
     });
+}// 데이터 저장
+    localStorage.setItem('activities', JSON.stringify(activities));
 }
+// 페이지 열릴 때 저장된 데이터 불러오기
+window.onload = function() {
+    updateDisplay('Voluntary Public Service');
+    updateDisplay('Personal Development');
+    updateDisplay('Physical Fitness');
+    updateDisplay('Expedition');
+};
