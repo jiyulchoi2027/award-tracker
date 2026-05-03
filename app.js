@@ -1,3 +1,47 @@
+// ─── Congressional Award 전체 레벨 요건 ───
+// Program Book p.4 기준
+let REQUIREMENTS = {
+    'Bronze Certificate': {
+        vps: { hours: 30,  months: 0 },
+        pd:  { hours: 15,  months: 0 },
+        pf:  { hours: 15,  months: 0 },
+        exp: { days: 1, nights: 0 }
+    },
+    'Silver Certificate': {
+        vps: { hours: 60,  months: 0 },
+        pd:  { hours: 30,  months: 0 },
+        pf:  { hours: 30,  months: 0 },
+        exp: { days: 2, nights: 0 }
+    },
+    'Gold Certificate': {
+        vps: { hours: 90,  months: 6 },
+        pd:  { hours: 45,  months: 6 },
+        pf:  { hours: 45,  months: 6 },
+        exp: { days: 3, nights: 0 }
+    },
+    'Bronze Medal': {
+        vps: { hours: 100, months: 7 },
+        pd:  { hours: 50,  months: 7 },
+        pf:  { hours: 50,  months: 7 },
+        exp: { days: 2, nights: 1 }
+    },
+    'Silver Medal': {
+        vps: { hours: 200, months: 12 },
+        pd:  { hours: 100, months: 12 },
+        pf:  { hours: 100, months: 12 },
+        exp: { days: 3, nights: 2 }
+    },
+    'Gold Medal': {
+        vps: { hours: 400, months: 24 },
+        pd:  { hours: 200, months: 24 },
+        pf:  { hours: 200, months: 24 },
+        exp: { days: 5, nights: 4 }
+    }
+};
+
+// 현재 선택된 레벨 (기본값: Silver Medal)
+let selectedLevel = localStorage.getItem('selectedLevel') || 'Silver Medal';
+
 // 현재 선택된 영역 저장
 let currentCategory = '';
 
@@ -7,14 +51,6 @@ let activities = JSON.parse(localStorage.getItem('activities')) || {
     'Personal Development': [],
     'Physical Fitness': [],
     'Expedition': []
-};
-
-// Silver 기준 시간
-let silverGoals = {
-    'Voluntary Public Service': 200,
-    'Personal Development': 100,
-    'Physical Fitness': 100,
-    'Expedition': 3
 };
 
 // 모달창 열기
@@ -112,9 +148,17 @@ function updateDisplay(category) {
         barId = 'exp-bar'; textId = 'exp-text'; 
         monthsId = null; listId = 'exp-list';
     }
-
+    
     // 진행률 바 업데이트
-    let goal = silverGoals[category];
+    // 현재 선택된 레벨의 요건 가져오기
+let req = REQUIREMENTS[selectedLevel];
+let sectionKey = {
+    'Voluntary Public Service': 'vps',
+    'Personal Development': 'pd',
+    'Physical Fitness': 'pf',
+    'Expedition': 'exp'
+}[category];
+let goal = req[sectionKey].hours;
     let percent = Math.min((totalHours / goal) * 100, 100);
     document.getElementById(barId).style.width = percent + '%';
 
