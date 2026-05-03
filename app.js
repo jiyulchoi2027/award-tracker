@@ -184,7 +184,7 @@ let goal = req[sectionKey].hours;
         `;
         listEl.appendChild(item);
     });
-}// 데이터 저장
+    // 데이터 저장
     localStorage.setItem('activities', JSON.stringify(activities));
 }
 // 페이지 열릴 때 저장된 데이터 불러오기
