@@ -188,9 +188,50 @@ let goal = req[sectionKey].hours;
     localStorage.setItem('activities', JSON.stringify(activities));
 }
 // 페이지 열릴 때 저장된 데이터 불러오기
-window.onload = function() {
+// 앱 시작
+function startApp() {
+    let name = document.getElementById('setup-name').value.trim();
+    let level = document.getElementById('setup-level').value;
+
+    if (!name) {
+        alert('Please enter your name!');
+        return;
+    }
+
+    // 선택한 레벨 저장
+    selectedLevel = level;
+    localStorage.setItem('selectedLevel', level);
+    localStorage.setItem('userName', name);
+
+    // 화면 전환
+    document.getElementById('setup-screen').style.display = 'none';
+    document.getElementById('main-screen').style.display = 'block';
+
+    // 헤더에 이름 표시
+    document.getElementById('header-name').textContent = 
+        name + ' | ' + level;
+
     updateDisplay('Voluntary Public Service');
     updateDisplay('Personal Development');
     updateDisplay('Physical Fitness');
     updateDisplay('Expedition');
+}
+
+// 페이지 열릴 때
+window.onload = function() {
+    let savedName = localStorage.getItem('userName');
+    let savedLevel = localStorage.getItem('selectedLevel');
+
+    // 이미 설정했으면 바로 메인 화면으로
+    if (savedName && savedLevel) {
+        selectedLevel = savedLevel;
+        document.getElementById('setup-screen').style.display = 'none';
+        document.getElementById('main-screen').style.display = 'block';
+        document.getElementById('header-name').textContent = 
+            savedName + ' | ' + savedLevel;
+        updateDisplay('Voluntary Public Service');
+        updateDisplay('Personal Development');
+        updateDisplay('Physical Fitness');
+        updateDisplay('Expedition');
+    }
 };

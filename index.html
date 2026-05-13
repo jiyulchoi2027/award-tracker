@@ -7,9 +7,36 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- 레벨 선택 화면 -->
+<div id="setup-screen">
+    <h1>Congressional Award Tracker</h1>
+    <p>Track your journey. Build your story. Own your future.</p>
+
+    <div class="setup-card">
+        <label>Your Name</label>
+        <input type="text" id="setup-name" class="input-field" 
+               placeholder="Enter your name">
+
+        <label>Target Award Level</label>
+        <select id="setup-level" class="input-field">
+            <option>Bronze Certificate</option>
+            <option>Silver Certificate</option>
+            <option>Gold Certificate</option>
+            <option>Bronze Medal</option>
+            <option selected>Silver Medal</option>
+            <option>Gold Medal</option>
+        </select>
+
+        <button class="add-btn" onclick="startApp()">Start Tracking!</button>
+    </div>
+</div>
+
+<!-- 메인 화면 -->
+<div id="main-screen" style="display:none">
 
     <header>
         <h1>Congressional Award Tracker</h1>
+        <p id="header-name"></p>
         <p>Built by Kyle Choi — Mill Creek High School, Class of 2027</p>
         <p>Track your journey. Build your story. Own your future.</p>
     </header>
@@ -102,5 +129,6 @@
     </div>
 
     <script src="app.js"></script>
+</div> <!-- main-screen 닫기 -->
 </body>
 </html>
