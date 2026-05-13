@@ -1,5 +1,5 @@
 // ─── Congressional Award 전체 레벨 요건 ───
-// Program Book p.4 기준
+// Program Book p.4 기준 (Updated May 2026)
 let REQUIREMENTS = {
     'Bronze Certificate': {
         vps: { hours: 30,  months: 0 },
