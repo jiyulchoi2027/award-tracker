@@ -164,7 +164,7 @@ let goal = req[sectionKey].hours;
 
     // 텍스트 업데이트
     document.getElementById(textId).textContent = 
-        totalHours + ' / ' + goal + ' hours completed (Silver Goal)';
+        totalHours + ' / ' + goal + ' hours completed (' + selectedLevel + ')';
     
     if (monthsId) {
         document.getElementById(monthsId).textContent = 
@@ -187,7 +187,6 @@ let goal = req[sectionKey].hours;
     // 데이터 저장
     localStorage.setItem('activities', JSON.stringify(activities));
 }
-// 페이지 열릴 때 저장된 데이터 불러오기
 // 앱 시작
 function startApp() {
     let name = document.getElementById('setup-name').value.trim();
@@ -216,7 +215,37 @@ function startApp() {
     updateDisplay('Physical Fitness');
     updateDisplay('Expedition');
 }
+// CSV 내보내기 기능
+function exportCSV() {
 
+    // CSV 첫 줄 (제목행)
+    let csv = "Section,Date,Hours,Description\n";
+
+    // 4개 영역 순서대로
+    let categories = [
+        'Voluntary Public Service',
+        'Personal Development',
+        'Physical Fitness',
+        'Expedition'
+    ];
+
+    categories.forEach(function(category) {
+        activities[category].forEach(function(a) {
+            csv += category + ","
+                 + a.date + ","
+                 + a.hours + ","
+                 + a.desc + "\n";
+        });
+    });
+
+    // 파일 다운로드
+    let blob = new Blob([csv], { type: 'text/csv' });
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement('a');
+    a.href = url;
+    a.download = "congressional-award.csv";
+    a.click();
+}
 // 페이지 열릴 때
 window.onload = function() {
     let savedName = localStorage.getItem('userName');
