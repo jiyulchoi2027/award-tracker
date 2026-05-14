@@ -167,8 +167,15 @@ let goal = req[sectionKey].hours;
         totalHours + ' / ' + goal + ' hours completed (' + selectedLevel + ')';
     
     if (monthsId) {
-        document.getElementById(monthsId).textContent = 
-            'Active months: ' + activeMonths + ' / 12 months';
+        let monthReq = req[sectionKey].months;
+        // Certificate 레벨은 월 요건 없음
+        if (monthReq === 0) {
+            document.getElementById(monthsId).textContent = 
+                'Active months: ' + activeMonths + ' (no month requirement)';
+        } else {
+            document.getElementById(monthsId).textContent = 
+                'Active months: ' + activeMonths + ' / ' + monthReq + ' months';
+        }
     }
 
     // 활동 목록 표시
