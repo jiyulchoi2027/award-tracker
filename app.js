@@ -40,7 +40,7 @@ let REQUIREMENTS = {
 };
 
 // 현재 선택된 레벨 (기본값: Silver Medal)
-let selectedLevel = localStorage.getItem('selectedLevel') || 'Silver Medal';
+let selectedLevel = localStorage.getItem('selectedLevel') || '';
 
 // 현재 선택된 영역 저장
 let currentCategory = '';
@@ -199,8 +199,14 @@ function startApp() {
     let name = document.getElementById('setup-name').value.trim();
     let level = document.getElementById('setup-level').value;
 
+    // 이름 입력 안 했을 때 경고
     if (!name) {
         alert('Please enter your name!');
+        return;
+    }
+    // 레벨 선택 안 했을 때 경고
+    if (!level) {
+        alert('Please select your target award level!');
         return;
     }
 
@@ -221,6 +227,29 @@ function startApp() {
     updateDisplay('Personal Development');
     updateDisplay('Physical Fitness');
     updateDisplay('Expedition');
+    // 선택한 레벨에 맞게 배지 업데이트
+    updateBadges(level);
+}
+// 레벨에 맞게 배지 업데이트
+function updateBadges(level) {
+    let req = REQUIREMENTS[level];
+
+    // VPS 배지
+    document.getElementById('vps-badge').textContent = 
+        level + ': ' + req.vps.hours + 'hrs';
+
+    // PD 배지
+    document.getElementById('pd-badge').textContent = 
+        level + ': ' + req.pd.hours + 'hrs';
+
+    // PF 배지
+    document.getElementById('pf-badge').textContent = 
+        level + ': ' + req.pf.hours + 'hrs';
+
+    // Expedition 배지
+    document.getElementById('exp-badge').textContent = 
+        level + ': ' + req.exp.days + ' days ' + 
+        (req.exp.nights > 0 ? req.exp.nights + ' nights' : '');
 }
 // CSV 내보내기 기능
 function exportCSV() {
@@ -269,5 +298,7 @@ window.onload = function() {
         updateDisplay('Personal Development');
         updateDisplay('Physical Fitness');
         updateDisplay('Expedition');
+        // 저장된 레벨로 배지 업데이트
+        updateBadges(savedLevel);
     }
 };

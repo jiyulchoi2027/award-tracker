@@ -19,11 +19,12 @@
 
         <label>Target Award Level</label>
         <select id="setup-level" class="input-field">
+            <option value="" disabled selected>Select your target level</option>
             <option>Bronze Certificate</option>
             <option>Silver Certificate</option>
             <option>Gold Certificate</option>
             <option>Bronze Medal</option>
-            <option selected>Silver Medal</option>
+            <option>Silver Medal</option>
             <option>Gold Medal</option>
         </select>
 
@@ -50,8 +51,7 @@
         <div class="card">
             <h3>
                 Voluntary Public Service
-                <span class="badge badge-silver">Silver: 200hrs</span>
-                <span class="badge badge-gold">Gold: 400hrs</span>
+                <span class="badge badge-silver" id="vps-badge">Silver: 200hrs</span>
             </h3>
             <div class="progress-bar-bg">
                 <div class="progress-bar-fill" id="vps-bar" style="width: 0%"></div>
@@ -66,8 +66,7 @@
         <div class="card">
             <h3>
                 Personal Development
-                <span class="badge badge-silver">Silver: 100hrs</span>
-                <span class="badge badge-gold">Gold: 200hrs</span>
+                <span class="badge badge-silver" id="pd-badge">Silver: 100hrs</span>
             </h3>
             <div class="progress-bar-bg">
                 <div class="progress-bar-fill" id="pd-bar" style="width: 0%"></div>
@@ -82,8 +81,7 @@
         <div class="card">
             <h3>
                 Physical Fitness
-                <span class="badge badge-silver">Silver: 100hrs</span>
-                <span class="badge badge-gold">Gold: 200hrs</span>
+                <span class="badge badge-silver" id="pf-badge">Silver: 100hrs</span>
             </h3>
             <div class="progress-bar-bg">
                 <div class="progress-bar-fill" id="pf-bar" style="width: 0%"></div>
@@ -98,8 +96,7 @@
         <div class="card">
             <h3>
                 Expedition & Exploration
-                <span class="badge badge-silver">Silver: 3days 2nights</span>
-                <span class="badge badge-gold">Gold: 5days 4nights</span>
+                <span class="badge badge-silver" id="exp-badge">Silver: 3days 2nights</span>
             </h3>
             <div class="progress-bar-bg">
                 <div class="progress-bar-fill" id="exp-bar" style="width: 0%"></div>
