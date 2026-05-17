@@ -58,7 +58,7 @@
             </div>
             <p class="progress-text" id="vps-text">0 / 200 hours completed (Silver Goal)</p>
             <p class="progress-text" id="vps-months">Active months: 0 / 12 months</p>
-            <button class="add-btn" onclick="openModal('Voluntary Public Service')">+ Add Activity</button>
+            <button class="add-btn" onclick="openGoalModal('Voluntary Public Service')">+ Add Goal</button>
             <div class="activity-list" id="vps-list"></div>
         </div>
 
@@ -73,7 +73,7 @@
             </div>
             <p class="progress-text" id="pd-text">0 / 100 hours completed (Silver Goal)</p>
             <p class="progress-text" id="pd-months">Active months: 0 / 12 months</p>
-            <button class="add-btn" onclick="openModal('Personal Development')">+ Add Activity</button>
+            <button class="add-btn" onclick="openGoalModal('Personal Development')">+ Add Goal</button>
             <div class="activity-list" id="pd-list"></div>
         </div>
 
@@ -88,7 +88,7 @@
             </div>
             <p class="progress-text" id="pf-text">0 / 100 hours completed (Silver Goal)</p>
             <p class="progress-text" id="pf-months">Active months: 0 / 12 months</p>
-            <button class="add-btn" onclick="openModal('Physical Fitness')">+ Add Activity</button>
+            <button class="add-btn" onclick="openGoalModal('Physical Fitness')">+ Add Goal</button>
             <div class="activity-list" id="pf-list"></div>
         </div>
 
@@ -103,13 +103,32 @@
             </div>
             <p class="progress-text" id="exp-text">0 days completed</p>
             <p class="progress-text">Required: 3 consecutive days (Silver)</p>
-            <button class="add-btn" onclick="openModal('Expedition')">+ Add Activity</button>
+            <button class="add-btn" onclick="openGoalModal('Expedition')">+ Add Goal</button>
             <div class="activity-list" id="exp-list"></div>
         </div>
 
     </div>
 
     <!-- 입력 모달창 -->
+     <!-- Goal 추가 모달창 -->
+<div id="goal-modal" class="modal-overlay" style="display:none">
+    <div class="modal">
+        <h3 id="goal-modal-title">Add Goal</h3>
+        <label>Goal Name</label>
+        <input type="text" id="goal-name" class="input-field" 
+               placeholder="e.g. Library Volunteering">
+        <label>Validator Name</label>
+        <input type="text" id="goal-validator" class="input-field" 
+               placeholder="e.g. Library Manager">
+        <label>Validator Email</label>
+        <input type="email" id="goal-validator-email" class="input-field" 
+               placeholder="validator@email.com">
+        <div class="modal-buttons">
+            <button class="save-btn" onclick="saveGoal()">Save Goal</button>
+            <button class="cancel-btn" onclick="closeGoalModal()">Cancel</button>
+        </div>
+    </div>
+</div>
     <div id="modal" class="modal-overlay" style="display:none">
         <div class="modal">
             <h3 id="modal-title">Add Activity</h3>

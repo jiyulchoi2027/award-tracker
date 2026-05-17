@@ -52,7 +52,53 @@ let activities = JSON.parse(localStorage.getItem('activities')) || {
     'Physical Fitness': [],
     'Expedition': []
 };
+// 각 영역별 Goal 데이터
+let goals = JSON.parse(localStorage.getItem('goals')) || {
+    'Voluntary Public Service': [],
+    'Personal Development': [],
+    'Physical Fitness': [],
+    'Expedition': []
+};
+// Goal 모달창 열기
+function openGoalModal(category) {
+    currentCategory = category;
+    document.getElementById('goal-modal-title').textContent = 
+        'Add Goal - ' + category;
+    document.getElementById('goal-name').value = '';
+    document.getElementById('goal-validator').value = '';
+    document.getElementById('goal-validator-email').value = '';
+    document.getElementById('goal-modal').style.display = 'flex';
+}
 
+// Goal 모달창 닫기
+function closeGoalModal() {
+    document.getElementById('goal-modal').style.display = 'none';
+}
+
+// Goal 저장
+function saveGoal() {
+    let name = document.getElementById('goal-name').value.trim();
+    let validator = document.getElementById('goal-validator').value.trim();
+    let email = document.getElementById('goal-validator-email').value.trim();
+
+    if (!name) {
+        alert('Please enter a goal name!');
+        return;
+    }
+
+    // Goal 데이터 저장
+    let goal = {
+        name: name,
+        validator: validator,
+        email: email,
+        activities: []
+    };
+
+    goals[currentCategory].push(goal);
+    localStorage.setItem('goals', JSON.stringify(goals));
+    alert('Goal saved: ' + name);
+    closeGoalModal();
+}
 // 모달창 열기
 function openModal(category) {
     currentCategory = category;
