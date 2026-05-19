@@ -58,7 +58,20 @@ before graduation.
 
 | Version | Date | Update |
 |---|---|---|
-| v0.1 | April 2026 | Project started, README created |
+| v0.1 | April 2026 | First HTML structure |
+| v0.2 | April 2026 | CSS design and card layout |
+| v0.3 | May 2026 | Activity input and photo upload |
+| v0.4 | May 2026 | Save data with localStorage |
+| v0.5 | May 2026 | All 6 award level requirements |
+| v0.6 | May 2026 | Setup screen with level selection |
+| v0.7 | May 2026 | CSV export feature |
+| v0.8 | May 2026 | Month requirements per level |
+| v0.9 | May 2026 | Auto update badges by level |
+| v0.10 | May 2026 | Goal modal with validator input |
+| v0.11 | May 2026 | Display saved goals in cards |
+| v0.12 | May 2026 | Goal count limit per section |
+| v0.13 | May 2026 | Goal delete function |
+| v0.14 | May 2026 | Mobile responsive design |
 
 ---
 

@@ -113,6 +113,22 @@ function saveGoal() {
     renderGoals(currentCategory);
     closeGoalModal();
 }
+// 현재 선택된 Goal 인덱스
+let currentGoalIndex = -1;
+
+// Activity 모달창 열기 (Goal 연결)
+function openActivityModal(category, goalIndex) {
+    currentCategory = category;
+    currentGoalIndex = goalIndex;
+    let goalName = goals[category][goalIndex].name;
+    document.getElementById('modal-title').textContent = 
+        'Add Activity - ' + goalName;
+    document.getElementById('modal').style.display = 'flex';
+    document.getElementById('input-date').value = '';
+    document.getElementById('input-hours').value = '';
+    document.getElementById('input-desc').value = '';
+    document.getElementById('input-photo').value = '';
+}
 // 모달창 열기
 function openModal(category) {
     currentCategory = category;
@@ -149,6 +165,13 @@ function saveActivity() {
         return;
     }
 
+    // 활동 시작일 이전 날짜 체크
+    let startDate = localStorage.getItem('startDate');
+    if (startDate && date < startDate) {
+        alert('Activity date cannot be before your start date (' + startDate + ')!');
+        return;
+    }
+
     // 사진 처리
     if (photoFile) {
         let reader = new FileReader();
@@ -159,7 +182,10 @@ function saveActivity() {
                 desc: desc,
                 photo: e.target.result
             };
-            activities[currentCategory].push(activity);
+            // Goal에 활동 저장
+            goals[currentCategory][currentGoalIndex].activities.push(activity);
+            localStorage.setItem('goals', JSON.stringify(goals));
+            renderGoals(currentCategory);
             updateDisplay(currentCategory);
             closeModal();
         };
@@ -171,9 +197,12 @@ function saveActivity() {
             desc: desc,
             photo: null
         };
-        activities[currentCategory].push(activity);
-        updateDisplay(currentCategory);
-        closeModal();
+        // Goal에 활동 저장
+            goals[currentCategory][currentGoalIndex].activities.push(activity);
+            localStorage.setItem('goals', JSON.stringify(goals));
+            renderGoals(currentCategory);
+            updateDisplay(currentCategory);
+            closeModal();
     }
 }
 
@@ -181,9 +210,13 @@ function saveActivity() {
 function updateDisplay(category) {
     let list = activities[category];
     
-    // 총 시간 계산
+    // 총 시간 계산 (Goal 안의 활동들에서 합산)
     let totalHours = 0;
-    list.forEach(a => totalHours += a.hours);
+    goals[category].forEach(function(goal) {
+        goal.activities.forEach(function(a) {
+            totalHours += a.hours;
+        });
+    });
 
     // 활성 월 계산
     let months = new Set();
@@ -219,7 +252,17 @@ let sectionKey = {
     'Expedition': 'exp'
 }[category];
 let goal = req[sectionKey].hours;
-    let percent = Math.min((totalHours / goal) * 100, 100);
+    let percent = 0;
+    // Expedition은 days 기준으로 진행률 계산
+    if (sectionKey === 'exp') {
+        let expDays = goals['Expedition'].reduce(function(total, g) {
+            return total + g.activities.length;
+        }, 0);
+        let requiredDays = req.exp.days;
+        percent = Math.min((expDays / requiredDays) * 100, 100);
+    } else {
+        percent = Math.min((totalHours / goal) * 100, 100);
+    }
     document.getElementById(barId).style.width = percent + '%';
 
     // 텍스트 업데이트
@@ -285,6 +328,10 @@ function startApp() {
     localStorage.setItem('selectedLevel', level);
     localStorage.setItem('userName', name);
 
+    // 활동 시작일 저장 (오늘 날짜)
+    let today = new Date().toISOString().split('T')[0];
+    localStorage.setItem('startDate', today);
+
     // 화면 전환
     document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('main-screen').style.display = 'block';
@@ -336,11 +383,27 @@ function renderGoals(category) {
     goals[category].forEach(function(goal, index) {
         let div = document.createElement('div');
         div.className = 'goal-card';
+        // 활동 목록 만들기
+        let activityHtml = '';
+        goal.activities.forEach(function(a) {
+            activityHtml += `
+                <div class="activity-item">
+                    <strong>${a.date}</strong> — ${a.hours} hrs<br>
+                    <span>${a.desc}</span>
+                    ${a.photo ? '<br><img src="' + a.photo + '" class="activity-photo">' : ''}
+                </div>
+            `;
+        });
+
         div.innerHTML = `
             <p><strong>📌 ${goal.name}</strong></p>
             <p>Validator: ${goal.validator || 'Not set'}</p>
             <p>Email: ${goal.email || 'Not set'}</p>
-            <button class="delete-btn" onclick="deleteGoal('${category}', ${index})">🗑️ Delete Goal</button>
+            <div style="display:flex; gap:8px; margin-top:6px;">
+                <button class="add-btn" onclick="openActivityModal('${category}', ${index})">+ Add Activity</button>
+                <button class="delete-btn" onclick="deleteGoal('${category}', ${index})">🗑️ Delete Goal</button>
+            </div>
+            ${activityHtml}
         `;
         container.appendChild(div);
     });
@@ -400,7 +463,14 @@ window.onload = function() {
         updateDisplay('Personal Development');
         updateDisplay('Physical Fitness');
         updateDisplay('Expedition');
+        
         // 저장된 레벨로 배지 업데이트
         updateBadges(savedLevel);
+
+        // 저장된 Goals 화면에 표시
+        renderGoals('Voluntary Public Service');
+        renderGoals('Personal Development');
+        renderGoals('Physical Fitness');
+        renderGoals('Expedition');
     }
 };
