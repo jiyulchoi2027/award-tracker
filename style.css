@@ -275,3 +275,41 @@ header p {
 .delete-btn:hover {
     background-color: #cc0000;
 }
+/* 모바일 반응형 */
+@media (max-width: 600px) {
+
+    header h1 {
+        font-size: 18px;
+    }
+
+    .container {
+        padding: 0 12px;
+        margin: 15px auto;
+    }
+
+    .card {
+        padding: 15px;
+    }
+
+    .modal {
+        width: 95%;
+        padding: 20px;
+    }
+
+    .setup-card {
+        padding: 20px;
+    }
+
+    .modal-buttons {
+        flex-direction: column;
+    }
+
+    .save-btn, .cancel-btn {
+        width: 100%;
+    }
+
+    .badge {
+        font-size: 10px;
+        padding: 2px 6px;
+    }
+}

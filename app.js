@@ -223,8 +223,18 @@ let goal = req[sectionKey].hours;
     document.getElementById(barId).style.width = percent + '%';
 
     // 텍스트 업데이트
-    document.getElementById(textId).textContent = 
-        totalHours + ' / ' + goal + ' hours completed (' + selectedLevel + ')';
+    // Expedition은 hours 대신 days/nights 표시
+    if (sectionKey === 'exp') {
+        let expDays = req.exp.days;
+        let expNights = req.exp.nights;
+        document.getElementById(textId).textContent = 
+            'Required: ' + expDays + ' days' + 
+            (expNights > 0 ? ' / ' + expNights + ' nights' : '') + 
+            ' (' + selectedLevel + ')';
+    } else {
+        document.getElementById(textId).textContent = 
+            totalHours + ' / ' + goal + ' hours completed (' + selectedLevel + ')';
+    }
     
     if (monthsId) {
         let monthReq = req[sectionKey].months;
