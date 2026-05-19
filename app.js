@@ -86,6 +86,20 @@ function saveGoal() {
         return;
     }
 
+        // Goal 개수 제한
+    let maxGoals = {
+        'Voluntary Public Service': 4,
+        'Personal Development': 2,
+        'Physical Fitness': 2,
+        'Expedition': 1
+    };
+
+    if (goals[currentCategory].length >= maxGoals[currentCategory]) {
+        alert('Maximum ' + maxGoals[currentCategory] + ' goals allowed for ' + currentCategory + '!');
+        closeGoalModal();
+        return;
+    }
+    
     // Goal 데이터 저장
     let goal = {
         name: name,
