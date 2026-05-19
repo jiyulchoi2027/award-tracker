@@ -330,9 +330,18 @@ function renderGoals(category) {
             <p><strong>📌 ${goal.name}</strong></p>
             <p>Validator: ${goal.validator || 'Not set'}</p>
             <p>Email: ${goal.email || 'Not set'}</p>
+            <button class="delete-btn" onclick="deleteGoal('${category}', ${index})">🗑️ Delete Goal</button>
         `;
         container.appendChild(div);
     });
+}
+// Goal 삭제
+function deleteGoal(category, index) {
+    if (confirm('Delete this goal?')) {
+        goals[category].splice(index, 1);
+        localStorage.setItem('goals', JSON.stringify(goals));
+        renderGoals(category);
+    }
 }
 // CSV 내보내기 기능
 function exportCSV() {
