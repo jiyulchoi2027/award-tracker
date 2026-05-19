@@ -347,3 +347,143 @@ header p {
     background-color: rgba(255,255,255,0.1);
     color: white;
 }
+
+/* ── Goal 카드 헤더 ── */
+.goal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.goal-title {
+    font-weight: bold;
+    font-size: 14px;
+    color: #1a3a6b;
+    margin-bottom: 3px;
+}
+
+.goal-meta {
+    font-size: 12px;
+    color: #888;
+}
+
+.goal-total {
+    text-align: right;
+    font-size: 15px;
+    font-weight: bold;
+    color: #1a3a6b;
+    min-width: 70px;
+}
+
+.goal-total span {
+    font-size: 11px;
+    font-weight: normal;
+    color: #999;
+}
+
+/* ── Activity Type 카드 ── */
+.act-type-card {
+    background: #f0f4f8;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+}
+
+.act-type-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.act-type-name {
+    font-size: 13px;
+    font-weight: bold;
+    color: #333;
+    flex: 1;
+}
+
+.act-type-summary {
+    font-size: 12px;
+    color: #1a3a6b;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.act-type-btns {
+    display: flex;
+    gap: 5px;
+}
+
+.log-btn {
+    background-color: #1a3a6b;
+    color: white;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.log-btn:hover { background-color: #2a4a8b; }
+
+.toggle-btn {
+    background-color: #e0e8f0;
+    color: #1a3a6b;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.toggle-btn:hover { background-color: #c8d8e8; }
+
+/* ── 날짜별 로그 ── */
+.logs-container {
+    margin-top: 8px;
+    border-top: 1px solid #dde4ec;
+    padding-top: 8px;
+}
+
+.log-item {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    padding: 4px 0;
+    border-bottom: 1px solid #eef1f5;
+    font-size: 12px;
+}
+
+.log-date {
+    color: #555;
+    min-width: 90px;
+    font-weight: bold;
+}
+
+.log-hours {
+    color: #1a3a6b;
+    font-weight: bold;
+    min-width: 45px;
+}
+
+.log-note {
+    color: #777;
+    flex: 1;
+}
+
+.no-logs {
+    font-size: 12px;
+    color: #bbb;
+    text-align: center;
+    padding: 6px 0;
+}
+
+/* ── 모달 힌트 텍스트 ── */
+.modal-hint {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 10px;
+    margin-top: -5px;
+}
