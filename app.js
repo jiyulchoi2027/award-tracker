@@ -96,7 +96,7 @@ function saveGoal() {
 
     goals[currentCategory].push(goal);
     localStorage.setItem('goals', JSON.stringify(goals));
-    alert('Goal saved: ' + name);
+    renderGoals(currentCategory);
     closeGoalModal();
 }
 // 모달창 열기
@@ -296,6 +296,29 @@ function updateBadges(level) {
     document.getElementById('exp-badge').textContent = 
         level + ': ' + req.exp.days + ' days ' + 
         (req.exp.nights > 0 ? req.exp.nights + ' nights' : '');
+}
+// Goal 화면에 표시
+function renderGoals(category) {
+    let sectionId = {
+        'Voluntary Public Service': 'vps-goals',
+        'Personal Development': 'pd-goals',
+        'Physical Fitness': 'pf-goals',
+        'Expedition': 'exp-goals'
+    }[category];
+
+    let container = document.getElementById(sectionId);
+    container.innerHTML = '';
+
+    goals[category].forEach(function(goal, index) {
+        let div = document.createElement('div');
+        div.className = 'goal-card';
+        div.innerHTML = `
+            <p><strong>📌 ${goal.name}</strong></p>
+            <p>Validator: ${goal.validator || 'Not set'}</p>
+            <p>Email: ${goal.email || 'Not set'}</p>
+        `;
+        container.appendChild(div);
+    });
 }
 // CSV 내보내기 기능
 function exportCSV() {
