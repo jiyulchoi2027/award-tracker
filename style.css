@@ -487,3 +487,187 @@ header p {
     margin-bottom: 10px;
     margin-top: -5px;
 }
+
+/* ── 헤더 버튼 그룹 ── */
+.header-btns {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+/* ── Goal 카드 ── */
+.goal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+.goal-title {
+    font-weight: bold;
+    font-size: 14px;
+    color: #1a3a6b;
+    margin-bottom: 3px;
+}
+.goal-meta {
+    font-size: 12px;
+    color: #888;
+}
+.goal-total {
+    text-align: right;
+    font-size: 15px;
+    font-weight: bold;
+    color: #1a3a6b;
+    min-width: 70px;
+}
+.goal-total span {
+    font-size: 11px;
+    font-weight: normal;
+    color: #999;
+}
+.goal-footer {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+/* ── Activity Type 카드 ── */
+.act-type-card {
+    background: #f0f4f8;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+}
+.act-type-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.act-type-name {
+    font-size: 13px;
+    font-weight: bold;
+    color: #333;
+    flex: 1;
+    min-width: 120px;
+}
+.act-type-summary {
+    font-size: 12px;
+    color: #1a3a6b;
+    font-weight: bold;
+    white-space: nowrap;
+}
+.act-type-btns {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+/* ── 버튼 종류 ── */
+.log-btn {
+    background-color: #1a3a6b;
+    color: white;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+.log-btn:hover { background-color: #2a4a8b; }
+
+.toggle-btn {
+    background-color: #e0e8f0;
+    color: #1a3a6b;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+.toggle-btn:hover { background-color: #c8d8e8; }
+
+.edit-btn {
+    background-color: #f0a500;
+    color: white;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+.edit-btn:hover { background-color: #d4900a; }
+
+/* ── 날짜별 로그 ── */
+.logs-container {
+    margin-top: 8px;
+    border-top: 1px solid #dde4ec;
+    padding-top: 6px;
+}
+.log-item {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid #eef1f5;
+    font-size: 12px;
+    flex-wrap: wrap;
+}
+.log-date  { color: #555; min-width: 90px; font-weight: bold; }
+.log-hours { color: #1a3a6b; font-weight: bold; min-width: 45px; }
+.log-note  { color: #777; flex: 1; }
+.log-actions {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+}
+.log-edit-btn, .log-del-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 13px;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+.log-edit-btn:hover { background: #fff3cd; }
+.log-del-btn:hover  { background: #fde8e8; }
+
+.no-logs {
+    font-size: 12px;
+    color: #bbb;
+    text-align: center;
+    padding: 8px 0;
+}
+
+/* ── 모달 힌트 ── */
+.modal-hint {
+    font-size: 12px;
+    color: #999;
+    margin: -4px 0 10px;
+}
+
+/* ── Reset 버튼 ── */
+.reset-btn {
+    background-color: transparent;
+    color: rgba(255,255,255,0.75);
+    border: 1px solid rgba(255,255,255,0.4);
+    padding: 6px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+}
+.reset-btn:hover {
+    background-color: rgba(255,255,255,0.12);
+    color: white;
+}
+
+/* ── 모바일 추가 반응형 ── */
+@media (max-width: 600px) {
+    .act-type-header { gap: 4px; }
+    .act-type-btns   { width: 100%; justify-content: flex-end; }
+    .goal-footer      { flex-direction: column; }
+    .goal-footer button { width: 100%; }
+    .log-item         { gap: 4px; }
+    .log-actions      { width: 100%; justify-content: flex-end; }
+}

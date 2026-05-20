@@ -1,5 +1,5 @@
 // ─── Congressional Award 전체 레벨 요건 ───
-let REQUIREMENTS = {
+const REQUIREMENTS = {
     'Bronze Certificate': {
         vps: { hours: 30,  months: 0 },
         pd:  { hours: 15,  months: 0 },
@@ -38,155 +38,258 @@ let REQUIREMENTS = {
     }
 };
 
-let selectedLevel = localStorage.getItem('selectedLevel') || '';
-let currentCategory = '';
-let currentGoalIndex = -1;
-let currentActivityIndex = -1;
+// ─── 전역 상태 ───
+let selectedLevel       = localStorage.getItem('selectedLevel') || '';
+let currentCategory     = '';
+let currentGoalIndex    = -1;
+let currentActivityIndex= -1;
+let editingLogIndex     = -1;   // 수정 중인 log 인덱스 (-1 = 신규)
 
-// ─── 새 데이터 구조 ───
-// goals[category] = [
-//   {
-//     name, validator, email,
-//     activityTypes: [
-//       { name, logs: [ { date, hours, note } ] }
-//     ]
-//   }
-// ]
+// ─── 데이터 구조 ───
+// goals[category] = [{
+//   name, validator, email,
+//   activityTypes: [{ name, logs: [{ date, hours, note }] }]
+// }]
 let goals = JSON.parse(localStorage.getItem('goals')) || {
     'Voluntary Public Service': [],
-    'Personal Development': [],
-    'Physical Fitness': [],
-    'Expedition': []
+    'Personal Development':     [],
+    'Physical Fitness':         [],
+    'Expedition':               []
 };
 
-// ─── Goal 모달 ───
+// ─── 유틸 ───
+const CATS = ['Voluntary Public Service','Personal Development','Physical Fitness','Expedition'];
+const CAT_KEYS = {
+    'Voluntary Public Service': 'vps',
+    'Personal Development':     'pd',
+    'Physical Fitness':         'pf',
+    'Expedition':               'exp'
+};
 
-function openGoalModal(category) {
-    currentCategory = category;
-    document.getElementById('goal-modal-title').textContent = 'Add Goal — ' + category;
-    document.getElementById('goal-name').value = '';
-    document.getElementById('goal-validator').value = '';
-    document.getElementById('goal-validator-email').value = '';
+function save() {
+    localStorage.setItem('goals', JSON.stringify(goals));
+}
+
+function today() {
+    let d = new Date();
+    let yyyy = d.getFullYear();
+    let mm   = String(d.getMonth() + 1).padStart(2, '0');
+    let dd   = String(d.getDate()).padStart(2, '0');
+    return yyyy + '-' + mm + '-' + dd;
+}
+
+// ════════════════════════════════════════════
+// GOAL 모달
+// ════════════════════════════════════════════
+
+function openGoalModal(category, editIndex) {
+    currentCategory  = category;
+    currentGoalIndex = (editIndex !== undefined) ? editIndex : -1;
+
+    if (currentGoalIndex >= 0) {
+        // 수정 모드
+        let g = goals[category][currentGoalIndex];
+        document.getElementById('goal-modal-title').textContent = 'Edit Goal';
+        document.getElementById('goal-name').value            = g.name;
+        document.getElementById('goal-validator').value       = g.validator || '';
+        document.getElementById('goal-validator-email').value = g.email    || '';
+    } else {
+        // 신규 모드
+        document.getElementById('goal-modal-title').textContent = 'Add Goal — ' + category;
+        document.getElementById('goal-name').value            = '';
+        document.getElementById('goal-validator').value       = '';
+        document.getElementById('goal-validator-email').value = '';
+    }
     document.getElementById('goal-modal').style.display = 'flex';
 }
 
 function closeGoalModal() {
     document.getElementById('goal-modal').style.display = 'none';
+    currentGoalIndex = -1;
 }
 
 function saveGoal() {
-    let name = document.getElementById('goal-name').value.trim();
+    let name      = document.getElementById('goal-name').value.trim();
     let validator = document.getElementById('goal-validator').value.trim();
-    let email = document.getElementById('goal-validator-email').value.trim();
+    let email     = document.getElementById('goal-validator-email').value.trim();
 
     if (!name) { alert('Please enter a goal name!'); return; }
 
-    let maxGoals = {
-        'Voluntary Public Service': 4,
-        'Personal Development': 2,
-        'Physical Fitness': 2,
-        'Expedition': 1
-    };
-
-    if (goals[currentCategory].length >= maxGoals[currentCategory]) {
-        alert('Maximum ' + maxGoals[currentCategory] + ' goals allowed for ' + currentCategory + '!');
-        closeGoalModal();
-        return;
+    if (currentGoalIndex >= 0) {
+        // 수정
+        goals[currentCategory][currentGoalIndex].name      = name;
+        goals[currentCategory][currentGoalIndex].validator = validator;
+        goals[currentCategory][currentGoalIndex].email     = email;
+    } else {
+        // 신규 — 개수 제한 체크
+        const maxGoals = { 'Voluntary Public Service':4, 'Personal Development':2, 'Physical Fitness':2, 'Expedition':1 };
+        if (goals[currentCategory].length >= maxGoals[currentCategory]) {
+            alert('Maximum ' + maxGoals[currentCategory] + ' goals allowed for ' + currentCategory + '!');
+            closeGoalModal();
+            return;
+        }
+        goals[currentCategory].push({ name, validator, email, activityTypes: [] });
     }
 
-    goals[currentCategory].push({
-        name: name,
-        validator: validator,
-        email: email,
-        activityTypes: []       // ← 새 구조: activityTypes 배열
-    });
-
-    localStorage.setItem('goals', JSON.stringify(goals));
+    save();
     renderGoals(currentCategory);
     updateDisplay(currentCategory);
     closeGoalModal();
 }
 
-// ─── Activity Type 모달 ───
-// Goal 안에 "도서관 봉사", "노인 도시락" 같은 활동 종류 추가
+function deleteGoal(category, index) {
+    if (confirm('Delete this goal and all activity types inside?')) {
+        goals[category].splice(index, 1);
+        save();
+        renderGoals(category);
+        updateDisplay(category);
+    }
+}
 
-function openActivityTypeModal(category, goalIndex) {
-    currentCategory = category;
-    currentGoalIndex = goalIndex;
-    let goalName = goals[category][goalIndex].name;
-    document.getElementById('act-type-modal-title').textContent = 'Add Activity Type — ' + goalName;
-    document.getElementById('act-type-name').value = '';
+// ════════════════════════════════════════════
+// ACTIVITY TYPE 모달
+// ════════════════════════════════════════════
+
+function openActivityTypeModal(category, goalIndex, editActIndex) {
+    currentCategory      = category;
+    currentGoalIndex     = goalIndex;
+    currentActivityIndex = (editActIndex !== undefined) ? editActIndex : -1;
+
+    if (currentActivityIndex >= 0) {
+        // 수정 모드
+        let actName = goals[category][goalIndex].activityTypes[currentActivityIndex].name;
+        document.getElementById('act-type-modal-title').textContent = 'Edit Activity Type';
+        document.getElementById('act-type-name').value = actName;
+    } else {
+        // 신규 모드
+        let goalName = goals[category][goalIndex].name;
+        document.getElementById('act-type-modal-title').textContent = 'Add Activity Type — ' + goalName;
+        document.getElementById('act-type-name').value = '';
+    }
     document.getElementById('act-type-modal').style.display = 'flex';
 }
 
 function closeActivityTypeModal() {
     document.getElementById('act-type-modal').style.display = 'none';
+    currentActivityIndex = -1;
 }
 
 function saveActivityType() {
     let name = document.getElementById('act-type-name').value.trim();
     if (!name) { alert('Please enter an activity type name!'); return; }
 
-    goals[currentCategory][currentGoalIndex].activityTypes.push({
-        name: name,
-        logs: []            // ← 날짜별 기록 배열
-    });
+    if (currentActivityIndex >= 0) {
+        // 수정
+        goals[currentCategory][currentGoalIndex].activityTypes[currentActivityIndex].name = name;
+    } else {
+        // 신규
+        goals[currentCategory][currentGoalIndex].activityTypes.push({ name, logs: [] });
+    }
 
-    localStorage.setItem('goals', JSON.stringify(goals));
+    save();
     renderGoals(currentCategory);
     closeActivityTypeModal();
 }
 
-// ─── Log 모달 (날짜별 기록 추가) ───
+function deleteActivityType(category, goalIndex, actIndex) {
+    if (confirm('Delete this activity type and all its logs?')) {
+        goals[category][goalIndex].activityTypes.splice(actIndex, 1);
+        save();
+        renderGoals(category);
+        updateDisplay(category);
+    }
+}
 
-function openLogModal(category, goalIndex, actIndex) {
-    currentCategory = category;
-    currentGoalIndex = goalIndex;
+// ════════════════════════════════════════════
+// LOG 모달 (신규 + 수정 통합)
+// ════════════════════════════════════════════
+
+function openLogModal(category, goalIndex, actIndex, editLogIdx) {
+    currentCategory      = category;
+    currentGoalIndex     = goalIndex;
     currentActivityIndex = actIndex;
-    let actName = goals[category][goalIndex].activityTypes[actIndex].name;
-    document.getElementById('log-modal-title').textContent = 'Add Log — ' + actName;
-    document.getElementById('log-date').value = '';
-    document.getElementById('log-hours').value = '';
-    document.getElementById('log-note').value = '';
+    editingLogIndex      = (editLogIdx !== undefined) ? editLogIdx : -1;
+
+    if (editingLogIndex >= 0) {
+        // 수정 모드
+        let log = goals[category][goalIndex].activityTypes[actIndex].logs[editingLogIndex];
+        document.getElementById('log-modal-title').textContent = 'Edit Log';
+        document.getElementById('log-date').value  = log.date;
+        document.getElementById('log-hours').value = log.hours;
+        document.getElementById('log-note').value  = log.note || '';
+    } else {
+        // 신규 모드
+        let actName = goals[category][goalIndex].activityTypes[actIndex].name;
+        document.getElementById('log-modal-title').textContent = 'Add Log — ' + actName;
+        document.getElementById('log-date').value  = '';
+        document.getElementById('log-hours').value = '';
+        document.getElementById('log-note').value  = '';
+    }
     document.getElementById('log-modal').style.display = 'flex';
 }
 
 function closeLogModal() {
     document.getElementById('log-modal').style.display = 'none';
     currentActivityIndex = -1;
+    currentGoalIndex     = -1;
+    editingLogIndex      = -1;
 }
 
 function saveLog() {
-    let date = document.getElementById('log-date').value;
+    let date  = document.getElementById('log-date').value;
     let hours = parseFloat(document.getElementById('log-hours').value);
-    let note = document.getElementById('log-note').value.trim();
+    let note  = document.getElementById('log-note').value.trim();
 
-    if (!date) { alert('Please select a date!'); return; }
-    if (isNaN(hours) || hours <= 0) { alert('Please enter valid hours (0.5 - 8)!'); return; }
+    // ── 유효성 검사 ──
+    if (!date)  { alert('Please select a date!'); return; }
+    if (isNaN(hours) || hours <= 0) { alert('Please enter valid hours (0.5 – 8)!'); return; }
     if (hours > 8) { alert('Maximum 8 hours per day allowed!'); return; }
 
+    // B1 수정: startDate와 같은 날은 허용 (< 만 차단, <= 아님)
     let startDate = localStorage.getItem('startDate');
     if (startDate && date < startDate) {
         alert('Date cannot be before your start date (' + startDate + ')!');
         return;
     }
 
-    goals[currentCategory][currentGoalIndex]
-        .activityTypes[currentActivityIndex]
-        .logs.push({ date: date, hours: hours, note: note });
+    // 미래 날짜 차단 (오늘 이후 불허)
+    if (date > today()) {
+        alert('Future dates are not allowed!');
+        return;
+    }
 
-    localStorage.setItem('goals', JSON.stringify(goals));
+    let logs = goals[currentCategory][currentGoalIndex].activityTypes[currentActivityIndex].logs;
+
+    if (editingLogIndex >= 0) {
+        // 수정
+        logs[editingLogIndex] = { date, hours, note };
+    } else {
+        // 신규
+        logs.push({ date, hours, note });
+    }
+
+    save();
     renderGoals(currentCategory);
     updateDisplay(currentCategory);
     closeLogModal();
 }
 
-// ─── 화면 업데이트 ───
+function deleteLog(category, goalIndex, actIndex, logIndex) {
+    if (confirm('Delete this log entry?')) {
+        goals[category][goalIndex].activityTypes[actIndex].logs.splice(logIndex, 1);
+        save();
+        renderGoals(category);
+        updateDisplay(category);
+    }
+}
+
+// ════════════════════════════════════════════
+// 화면 업데이트
+// ════════════════════════════════════════════
 
 function updateDisplay(category) {
-    // 총 시간 계산 (모든 Goal → ActivityType → logs 합산)
     let totalHours = 0;
-    let months = new Set();
+    let months     = new Set();
 
     goals[category].forEach(function(goal) {
         goal.activityTypes.forEach(function(act) {
@@ -198,106 +301,101 @@ function updateDisplay(category) {
     });
     let activeMonths = months.size;
 
-    let barId, textId, monthsId;
-    if (category === 'Voluntary Public Service') {
-        barId = 'vps-bar'; textId = 'vps-text'; monthsId = 'vps-months';
-    } else if (category === 'Personal Development') {
-        barId = 'pd-bar'; textId = 'pd-text'; monthsId = 'pd-months';
-    } else if (category === 'Physical Fitness') {
-        barId = 'pf-bar'; textId = 'pf-text'; monthsId = 'pf-months';
-    } else {
-        barId = 'exp-bar'; textId = 'exp-text'; monthsId = null;
-    }
+    const ids = {
+        'Voluntary Public Service': { bar:'vps-bar', text:'vps-text', months:'vps-months' },
+        'Personal Development':     { bar:'pd-bar',  text:'pd-text',  months:'pd-months'  },
+        'Physical Fitness':         { bar:'pf-bar',  text:'pf-text',  months:'pf-months'  },
+        'Expedition':               { bar:'exp-bar', text:'exp-text', months:null          }
+    };
+    let { bar: barId, text: textId, months: monthsId } = ids[category];
 
-    let req = REQUIREMENTS[selectedLevel];
-    let sectionKey = {
-        'Voluntary Public Service': 'vps',
-        'Personal Development': 'pd',
-        'Physical Fitness': 'pf',
-        'Expedition': 'exp'
-    }[category];
+    let req        = REQUIREMENTS[selectedLevel];
+    let sectionKey = CAT_KEYS[category];
 
-    // 진행률 바
+    // 진행률 계산
     let percent = 0;
+    let completedDays = 0;
     if (sectionKey === 'exp') {
-        let completedDays = 0;
         goals['Expedition'].forEach(function(g) {
-            g.activityTypes.forEach(function(act) {
-                completedDays += act.logs.length;
-            });
+            g.activityTypes.forEach(function(act) { completedDays += act.logs.length; });
         });
         percent = Math.min((completedDays / req.exp.days) * 100, 100);
     } else {
         percent = Math.min((totalHours / req[sectionKey].hours) * 100, 100);
     }
-    document.getElementById(barId).style.width = percent.toFixed(1) + '%';
+
+    // 진행률 바 색상 (100% 달성 시 녹색)
+    let barEl = document.getElementById(barId);
+    barEl.style.width = percent.toFixed(1) + '%';
+    barEl.style.backgroundColor = percent >= 100 ? '#27ae60' : '#1a3a6b';
 
     // 텍스트
+    let textEl = document.getElementById(textId);
     if (sectionKey === 'exp') {
-        let completedDays = 0;
-        goals['Expedition'].forEach(function(g) {
-            g.activityTypes.forEach(function(act) {
-                completedDays += act.logs.length;
-            });
-        });
-        document.getElementById(textId).textContent =
+        textEl.textContent =
             completedDays + ' / ' + req.exp.days + ' days completed' +
             (req.exp.nights > 0 ? ' (' + req.exp.nights + ' nights required)' : '') +
             ' — ' + selectedLevel;
     } else {
-        document.getElementById(textId).textContent =
-            totalHours + ' / ' + req[sectionKey].hours + ' hours completed (' + selectedLevel + ')';
+        let done = percent >= 100 ? ' ✅' : '';
+        textEl.textContent =
+            totalHours + ' / ' + req[sectionKey].hours + ' hours completed (' + selectedLevel + ')' + done;
     }
 
     // 월 요건
     if (monthsId) {
         let monthReq = req[sectionKey].months;
+        let monthEl  = document.getElementById(monthsId);
         if (monthReq === 0) {
-            document.getElementById(monthsId).textContent =
-                'Active months: ' + activeMonths + ' (no month requirement)';
+            monthEl.textContent = 'Active months: ' + activeMonths + ' (no month requirement)';
         } else {
-            document.getElementById(monthsId).textContent =
-                'Active months: ' + activeMonths + ' / ' + monthReq + ' months';
+            let monthDone = activeMonths >= monthReq ? ' ✅' : '';
+            monthEl.textContent = 'Active months: ' + activeMonths + ' / ' + monthReq + ' months' + monthDone;
         }
     }
 }
 
-// ─── Goal 렌더링 ───
+// ════════════════════════════════════════════
+// Goal 렌더링
+// ════════════════════════════════════════════
 
 function renderGoals(category) {
-    let sectionId = {
+    const sectionIds = {
         'Voluntary Public Service': 'vps-goals',
-        'Personal Development': 'pd-goals',
-        'Physical Fitness': 'pf-goals',
-        'Expedition': 'exp-goals'
-    }[category];
-
-    let container = document.getElementById(sectionId);
+        'Personal Development':     'pd-goals',
+        'Physical Fitness':         'pf-goals',
+        'Expedition':               'exp-goals'
+    };
+    let container = document.getElementById(sectionIds[category]);
     container.innerHTML = '';
 
     goals[category].forEach(function(goal, gIdx) {
-        // Activity Type별 합산
-        let goalTotalHours = 0;
-        let goalTotalSessions = 0;
+        // Goal 합산
+        let goalHours    = 0;
+        let goalSessions = 0;
         goal.activityTypes.forEach(function(act) {
-            act.logs.forEach(function(log) { goalTotalHours += log.hours; });
-            goalTotalSessions += act.logs.length;
+            act.logs.forEach(function(log) { goalHours += log.hours; });
+            goalSessions += act.logs.length;
         });
 
         // Activity Types HTML
         let actTypesHtml = '';
         goal.activityTypes.forEach(function(act, aIdx) {
-            let actHours = act.logs.reduce(function(s, l) { return s + l.hours; }, 0);
+            let actHours    = act.logs.reduce(function(s,l){ return s+l.hours; }, 0);
             let actSessions = act.logs.length;
 
-            // 날짜별 로그 (접기/펼치기)
+            // 로그 목록
             let logsHtml = '';
-            act.logs.forEach(function(log) {
+            act.logs.forEach(function(log, lIdx) {
                 logsHtml += `
                     <div class="log-item">
                         <span class="log-date">${log.date}</span>
                         <span class="log-hours">${log.hours} hrs</span>
-                        ${log.note ? '<span class="log-note">' + log.note + '</span>' : ''}
+                        <span class="log-note">${log.note || ''}</span>
+                        <div class="log-actions">
+                            <button class="log-edit-btn" onclick="openLogModal('${category}',${gIdx},${aIdx},${lIdx})">✏️</button>
+                            <button class="log-del-btn"  onclick="deleteLog('${category}',${gIdx},${aIdx},${lIdx})">🗑️</button>
+                        </div>
                     </div>`;
             });
 
@@ -307,13 +405,14 @@ function renderGoals(category) {
                         <span class="act-type-name">📁 ${act.name}</span>
                         <span class="act-type-summary">${actHours} hrs / ${actSessions} sessions</span>
                         <div class="act-type-btns">
-                            <button class="log-btn" onclick="openLogModal('${category}', ${gIdx}, ${aIdx})">+ Log</button>
+                            <button class="log-btn"    onclick="openLogModal('${category}',${gIdx},${aIdx})">+ Log</button>
                             <button class="toggle-btn" onclick="toggleLogs('logs-${category}-${gIdx}-${aIdx}')">▼ View</button>
-                            <button class="delete-btn" onclick="deleteActivityType('${category}', ${gIdx}, ${aIdx})">🗑️</button>
+                            <button class="edit-btn"   onclick="openActivityTypeModal('${category}',${gIdx},${aIdx})">✏️</button>
+                            <button class="delete-btn" onclick="deleteActivityType('${category}',${gIdx},${aIdx})">🗑️</button>
                         </div>
                     </div>
                     <div class="logs-container" id="logs-${category}-${gIdx}-${aIdx}" style="display:none">
-                        ${logsHtml || '<p class="no-logs">No logs yet.</p>'}
+                        ${logsHtml || '<p class="no-logs">No logs yet. Click "+ Log" to add.</p>'}
                     </div>
                 </div>`;
         });
@@ -324,16 +423,16 @@ function renderGoals(category) {
             <div class="goal-header">
                 <div>
                     <p class="goal-title">📌 ${goal.name}</p>
-                    <p class="goal-meta">Validator: ${goal.validator || 'Not set'} &nbsp;|&nbsp; ${goal.email || ''}</p>
+                    <p class="goal-meta">Validator: ${goal.validator || 'Not set'}&nbsp;|&nbsp;${goal.email || '—'}</p>
                 </div>
-                <div class="goal-total">${goalTotalHours} hrs<br><span>${goalTotalSessions} sessions</span></div>
+                <div class="goal-total">${goalHours} hrs<br><span>${goalSessions} sessions</span></div>
             </div>
             ${actTypesHtml}
-            <div style="display:flex; gap:8px; margin-top:10px;">
-                <button class="add-btn" onclick="openActivityTypeModal('${category}', ${gIdx})">+ Add Activity Type</button>
-                <button class="delete-btn" onclick="deleteGoal('${category}', ${gIdx})">🗑️ Delete Goal</button>
-            </div>
-        `;
+            <div class="goal-footer">
+                <button class="add-btn"    onclick="openActivityTypeModal('${category}',${gIdx})">+ Add Activity Type</button>
+                <button class="edit-btn"   onclick="openGoalModal('${category}',${gIdx})">✏️ Edit Goal</button>
+                <button class="delete-btn" onclick="deleteGoal('${category}',${gIdx})">🗑️ Delete Goal</button>
+            </div>`;
         container.appendChild(div);
     });
 }
@@ -345,27 +444,9 @@ function toggleLogs(id) {
     el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
-// Activity Type 삭제
-function deleteActivityType(category, goalIndex, actIndex) {
-    if (confirm('Delete this activity type and all its logs?')) {
-        goals[category][goalIndex].activityTypes.splice(actIndex, 1);
-        localStorage.setItem('goals', JSON.stringify(goals));
-        renderGoals(category);
-        updateDisplay(category);
-    }
-}
-
-// Goal 삭제
-function deleteGoal(category, index) {
-    if (confirm('Delete this goal and all activity types inside?')) {
-        goals[category].splice(index, 1);
-        localStorage.setItem('goals', JSON.stringify(goals));
-        renderGoals(category);
-        updateDisplay(category);
-    }
-}
-
-// ─── 배지 업데이트 ───
+// ════════════════════════════════════════════
+// 배지 업데이트
+// ════════════════════════════════════════════
 
 function updateBadges(level) {
     let req = REQUIREMENTS[level];
@@ -377,40 +458,28 @@ function updateBadges(level) {
         (req.exp.nights > 0 ? ' / ' + req.exp.nights + ' nights' : '');
 }
 
-// ─── CSV 내보내기 ───
+// ════════════════════════════════════════════
+// CSV 내보내기
+// ════════════════════════════════════════════
 
 function exportCSV() {
-    function csvField(val) {
-        return '"' + String(val).replace(/"/g, '""') + '"';
-    }
+    function f(val) { return '"' + String(val).replace(/"/g,'""') + '"'; }
 
     let csv = 'Section,Goal,Activity Type,Date,Hours,Note\n';
-    let categories = [
-        'Voluntary Public Service',
-        'Personal Development',
-        'Physical Fitness',
-        'Expedition'
-    ];
-
-    categories.forEach(function(category) {
-        goals[category].forEach(function(goal) {
+    CATS.forEach(function(cat) {
+        goals[cat].forEach(function(goal) {
             goal.activityTypes.forEach(function(act) {
                 act.logs.forEach(function(log) {
-                    csv += csvField(category) + ',' +
-                           csvField(goal.name) + ',' +
-                           csvField(act.name) + ',' +
-                           csvField(log.date) + ',' +
-                           csvField(log.hours) + ',' +
-                           csvField(log.note || '') + '\n';
+                    csv += f(cat)+','+f(goal.name)+','+f(act.name)+','+f(log.date)+','+f(log.hours)+','+f(log.note||'')+'\n';
                 });
             });
         });
     });
 
-    let blob = new Blob([csv], { type: 'text/csv' });
-    let url = URL.createObjectURL(blob);
-    let a = document.createElement('a');
-    a.href = url;
+    let blob = new Blob([csv], { type:'text/csv' });
+    let url  = URL.createObjectURL(blob);
+    let a    = document.createElement('a');
+    a.href   = url;
     a.download = 'congressional-award-' + (localStorage.getItem('userName') || 'export') + '.csv';
     document.body.appendChild(a);
     a.click();
@@ -418,10 +487,12 @@ function exportCSV() {
     URL.revokeObjectURL(url);
 }
 
-// ─── 앱 시작 ───
+// ════════════════════════════════════════════
+// 앱 시작
+// ════════════════════════════════════════════
 
 function startApp() {
-    let name = document.getElementById('setup-name').value.trim();
+    let name  = document.getElementById('setup-name').value.trim();
     let level = document.getElementById('setup-level').value;
 
     if (!name)  { alert('Please enter your name!'); return; }
@@ -430,22 +501,24 @@ function startApp() {
     selectedLevel = level;
     localStorage.setItem('selectedLevel', level);
     localStorage.setItem('userName', name);
-    localStorage.setItem('startDate', new Date().toISOString().split('T')[0]);
+    localStorage.setItem('startDate', today());
 
     document.getElementById('setup-screen').style.display = 'none';
-    document.getElementById('main-screen').style.display = 'block';
-    document.getElementById('header-name').textContent = name + ' | ' + level;
+    document.getElementById('main-screen').style.display  = 'block';
+    document.getElementById('header-name').textContent    = name + ' | ' + level;
 
-    ['Voluntary Public Service','Personal Development','Physical Fitness','Expedition']
-        .forEach(function(c) { updateDisplay(c); });
+    CATS.forEach(function(c) { updateDisplay(c); });
     updateBadges(level);
 }
 
-// ─── Settings 모달 ───
+// ════════════════════════════════════════════
+// Settings 모달
+// ════════════════════════════════════════════
 
 function openSettingsModal() {
-    document.getElementById('settings-name').value  = localStorage.getItem('userName') || '';
-    document.getElementById('settings-level').value = localStorage.getItem('selectedLevel') || '';
+    document.getElementById('settings-name').value      = localStorage.getItem('userName')      || '';
+    document.getElementById('settings-level').value     = localStorage.getItem('selectedLevel') || '';
+    document.getElementById('settings-startdate').value = localStorage.getItem('startDate')     || '';
     document.getElementById('settings-modal').style.display = 'flex';
 }
 
@@ -454,18 +527,23 @@ function closeSettingsModal() {
 }
 
 function saveSettings() {
-    let name  = document.getElementById('settings-name').value.trim();
-    let level = document.getElementById('settings-level').value;
-    if (!name)  { alert('Please enter your name!'); return; }
-    if (!level) { alert('Please select a level!'); return; }
+    let name      = document.getElementById('settings-name').value.trim();
+    let level     = document.getElementById('settings-level').value;
+    let startDate = document.getElementById('settings-startdate').value;
 
+    if (!name)  { alert('Please enter your name!'); return; }
+    if (!level) { alert('Please select a level!');  return; }
+    if (!startDate) { alert('Please select a start date!'); return; }
+
+    // B3 수정: selectedLevel 전역 변수 반드시 업데이트
     selectedLevel = level;
-    localStorage.setItem('userName', name);
+    localStorage.setItem('userName',      name);
     localStorage.setItem('selectedLevel', level);
+    localStorage.setItem('startDate',     startDate);
+
     document.getElementById('header-name').textContent = name + ' | ' + level;
 
-    ['Voluntary Public Service','Personal Development','Physical Fitness','Expedition']
-        .forEach(function(c) { updateDisplay(c); });
+    CATS.forEach(function(c) { updateDisplay(c); });
     updateBadges(level);
     closeSettingsModal();
 }
@@ -476,12 +554,12 @@ function resetAllData() {
             localStorage.clear();
             goals = {
                 'Voluntary Public Service': [],
-                'Personal Development': [],
-                'Physical Fitness': [],
-                'Expedition': []
+                'Personal Development':     [],
+                'Physical Fitness':         [],
+                'Expedition':               []
             };
             selectedLevel = '';
-            document.getElementById('main-screen').style.display = 'none';
+            document.getElementById('main-screen').style.display  = 'none';
             document.getElementById('setup-screen').style.display = 'flex';
             document.getElementById('setup-name').value  = '';
             document.getElementById('setup-level').value = '';
@@ -490,7 +568,9 @@ function resetAllData() {
     }
 }
 
-// ─── 페이지 로드 ───
+// ════════════════════════════════════════════
+// 페이지 로드
+// ════════════════════════════════════════════
 
 window.onload = function() {
     let savedName  = localStorage.getItem('userName');
@@ -500,13 +580,12 @@ window.onload = function() {
         selectedLevel = savedLevel;
         document.getElementById('setup-screen').style.display = 'none';
         document.getElementById('main-screen').style.display  = 'block';
-        document.getElementById('header-name').textContent = savedName + ' | ' + savedLevel;
+        document.getElementById('header-name').textContent    = savedName + ' | ' + savedLevel;
 
-        ['Voluntary Public Service','Personal Development','Physical Fitness','Expedition']
-            .forEach(function(c) {
-                updateDisplay(c);
-                renderGoals(c);
-            });
+        CATS.forEach(function(c) {
+            updateDisplay(c);
+            renderGoals(c);
+        });
         updateBadges(savedLevel);
     }
 };
