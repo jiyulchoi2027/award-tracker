@@ -85,32 +85,42 @@ function today() {
 
 // 데이터 구조:
 // expTrips = [{
-//   location, startDate, endDate, days, nights, travelDays, validatorEmail,
-//   dayLogs: [{
-//     date, activities: [{ startTime, endTime, hours, description, photo }]
-//   }]
+//   location, startDate, endDate,
+//   totalDays, travelDays, countableDays, nights(자동),
+//   validatorEmail,
+//   dayLogs: [{ date, isTravel, activities: [{startTime,endTime,hours,description,photo}] }]
 // }]
 
-let expTrips = JSON.parse(localStorage.getItem('expTrips')) || [];
+let expTrips       = JSON.parse(localStorage.getItem('expTrips')) || [];
 let currentTripIdx = -1;
 let currentDayIdx  = -1;
 let editingTripIdx = -1;
+let editingActIdx  = -1;
 
 function saveExpTrips() {
     localStorage.setItem('expTrips', JSON.stringify(expTrips));
 }
 
-// ── Trip 날짜 계산 ──
+// ── Trip 날짜 자동계산 ──
 function calcTripDays() {
-    let start = document.getElementById('trip-start').value;
-    let end   = document.getElementById('trip-end').value;
+    let start      = document.getElementById('trip-start').value;
+    let end        = document.getElementById('trip-end').value;
+    let travelDays = parseInt(document.getElementById('trip-travel-days').value) || 0;
+
     if (start && end && end >= start) {
-        let diff = Math.round((new Date(end) - new Date(start)) / (1000*60*60*24));
-        let days = diff + 1;
-        document.getElementById('trip-days-calc').textContent = days + ' day(s)';
+        let diff         = Math.round((new Date(end) - new Date(start)) / (1000*60*60*24));
+        let totalDays    = diff + 1;
+        let countable    = Math.max(totalDays - travelDays, 0);
+        // nights 자동계산: countable days - 1
+        let nights       = Math.max(countable - 1, 0);
+
+        document.getElementById('trip-days-calc').textContent =
+            totalDays + ' total days → ' + countable + ' countable days / ' + nights + ' nights';
         document.getElementById('trip-days-calc').style.display = 'block';
+        document.getElementById('trip-nights-display').textContent = nights;
     } else {
         document.getElementById('trip-days-calc').style.display = 'none';
+        document.getElementById('trip-nights-display').textContent = '—';
     }
 }
 
@@ -122,21 +132,20 @@ function openTripModal(editIdx) {
 
     if (editingTripIdx >= 0) {
         let t = expTrips[editingTripIdx];
-        document.getElementById('trip-location').value      = t.location      || '';
-        document.getElementById('trip-start').value         = t.startDate     || '';
-        document.getElementById('trip-end').value           = t.endDate       || '';
-        document.getElementById('trip-nights').value        = t.nights        || 0;
-        document.getElementById('trip-travel-days').value   = t.travelDays    || 0;
-        document.getElementById('trip-validator').value     = t.validatorEmail|| '';
+        document.getElementById('trip-location').value    = t.location       || '';
+        document.getElementById('trip-start').value       = t.startDate      || '';
+        document.getElementById('trip-end').value         = t.endDate        || '';
+        document.getElementById('trip-travel-days').value = t.travelDays     || 0;
+        document.getElementById('trip-validator').value   = t.validatorEmail || '';
         calcTripDays();
     } else {
-        document.getElementById('trip-location').value      = '';
-        document.getElementById('trip-start').value         = '';
-        document.getElementById('trip-end').value           = '';
-        document.getElementById('trip-nights').value        = 0;
-        document.getElementById('trip-travel-days').value   = 0;
-        document.getElementById('trip-validator').value     = '';
-        document.getElementById('trip-days-calc').style.display = 'none';
+        document.getElementById('trip-location').value    = '';
+        document.getElementById('trip-start').value       = '';
+        document.getElementById('trip-end').value         = '';
+        document.getElementById('trip-travel-days').value = 0;
+        document.getElementById('trip-validator').value   = '';
+        document.getElementById('trip-days-calc').style.display  = 'none';
+        document.getElementById('trip-nights-display').textContent = '—';
     }
     document.getElementById('trip-modal').style.display = 'flex';
 }
@@ -150,7 +159,6 @@ function saveTrip() {
     let location       = document.getElementById('trip-location').value.trim();
     let startDate      = document.getElementById('trip-start').value;
     let endDate        = document.getElementById('trip-end').value;
-    let nights         = parseInt(document.getElementById('trip-nights').value)      || 0;
     let travelDays     = parseInt(document.getElementById('trip-travel-days').value) || 0;
     let validatorEmail = document.getElementById('trip-validator').value.trim();
 
@@ -159,27 +167,46 @@ function saveTrip() {
     if (!endDate)   { alert('Please select an end date!');  return; }
     if (endDate < startDate) { alert('End date must be after start date!'); return; }
 
-    let diff = Math.round((new Date(endDate) - new Date(startDate)) / (1000*60*60*24));
-    let days = diff + 1;
+    // 5. Expedition start date 체크
+    let programStart = localStorage.getItem('startDate');
+    if (programStart && startDate < programStart) {
+        alert('Trip date cannot be before your program start date (' + programStart + ')!');
+        return;
+    }
 
-    // 기존 dayLogs 유지 (편집 시)
+    let diff         = Math.round((new Date(endDate) - new Date(startDate)) / (1000*60*60*24));
+    let totalDays    = diff + 1;
+    let countable    = Math.max(totalDays - travelDays, 0);
+    let nights       = Math.max(countable - 1, 0);
+
+    // 기존 dayLogs 유지
     let existingDayLogs = (editingTripIdx >= 0 && expTrips[editingTripIdx])
         ? expTrips[editingTripIdx].dayLogs : [];
 
-    // dayLogs: days 수만큼 자동 생성 (없는 날짜만 추가)
+    // dayLogs 생성 (첫날/마지막날 travel days면 isTravel=true)
     let dayLogs = [];
-    for (let i = 0; i < days; i++) {
+    for (let i = 0; i < totalDays; i++) {
         let d = new Date(startDate);
         d.setDate(d.getDate() + i);
-        let dateStr = d.getFullYear() + '-'
+        let dateStr  = d.getFullYear() + '-'
             + String(d.getMonth()+1).padStart(2,'0') + '-'
             + String(d.getDate()).padStart(2,'0');
-        // 기존 dayLog 있으면 유지
+        // 첫날/마지막날을 travel day로 마킹 (travelDays >= 2면 둘 다, 1이면 첫날만)
+        let isTravel = false;
+        if (travelDays >= 1 && i === 0)              isTravel = true;
+        if (travelDays >= 2 && i === totalDays - 1)  isTravel = true;
+
         let existing = existingDayLogs.find(function(dl){ return dl.date === dateStr; });
-        dayLogs.push(existing || { date: dateStr, activities: [] });
+        dayLogs.push(existing
+            ? Object.assign({}, existing, { isTravel: isTravel })
+            : { date: dateStr, isTravel: isTravel, activities: [] });
     }
 
-    let tripData = { location, startDate, endDate, days, nights, travelDays, validatorEmail, dayLogs };
+    let tripData = {
+        location, startDate, endDate,
+        totalDays, travelDays, countableDays: countable, nights,
+        validatorEmail, dayLogs
+    };
 
     if (editingTripIdx >= 0) {
         expTrips[editingTripIdx] = tripData;
@@ -202,26 +229,28 @@ function deleteTrip(idx) {
     }
 }
 
-// ── Activity 모달 (Day 안의 시간대별 활동) ──
-let editingActivityIdx = -1;
-
+// ── Activity 모달 ──
 function openActivityModal(tripIdx, dayIdx, actIdx) {
-    currentTripIdx    = Number(tripIdx);
-    currentDayIdx     = Number(dayIdx);
-    editingActivityIdx = (actIdx !== undefined) ? Number(actIdx) : -1;
+    currentTripIdx = Number(tripIdx);
+    currentDayIdx  = Number(dayIdx);
+    editingActIdx  = (actIdx !== undefined) ? Number(actIdx) : -1;
 
-    let dayDate = expTrips[tripIdx].dayLogs[dayIdx].date;
+    let day = expTrips[tripIdx].dayLogs[dayIdx];
     document.getElementById('act-modal-title').textContent =
-        (editingActivityIdx >= 0 ? 'Edit Activity' : 'Add Activity') +
-        ' — Day ' + (dayIdx+1) + ' (' + dayDate + ')';
+        (editingActIdx >= 0 ? 'Edit Activity' : 'Add Activity') +
+        ' — Day ' + (dayIdx+1) + ' (' + day.date + ')';
 
-    if (editingActivityIdx >= 0) {
-        let a = expTrips[tripIdx].dayLogs[dayIdx].activities[editingActivityIdx];
-        document.getElementById('act-start-time').value  = a.startTime  || '';
-        document.getElementById('act-end-time').value    = a.endTime    || '';
-        document.getElementById('act-description').value = a.description|| '';
-        document.getElementById('act-photo-preview').style.display = a.photo ? 'block' : 'none';
-        if (a.photo) document.getElementById('act-photo-preview').src = a.photo;
+    if (editingActIdx >= 0) {
+        let a = day.activities[editingActIdx];
+        document.getElementById('act-start-time').value  = a.startTime   || '';
+        document.getElementById('act-end-time').value    = a.endTime     || '';
+        document.getElementById('act-description').value = a.description || '';
+        if (a.photo) {
+            document.getElementById('act-photo-preview').src          = a.photo;
+            document.getElementById('act-photo-preview').style.display = 'block';
+        } else {
+            document.getElementById('act-photo-preview').style.display = 'none';
+        }
     } else {
         document.getElementById('act-start-time').value  = '';
         document.getElementById('act-end-time').value    = '';
@@ -235,10 +264,9 @@ function openActivityModal(tripIdx, dayIdx, actIdx) {
 
 function closeActivityModal() {
     document.getElementById('act-modal').style.display = 'none';
-    currentTripIdx = -1; currentDayIdx = -1; editingActivityIdx = -1;
+    currentTripIdx = -1; currentDayIdx = -1; editingActIdx = -1;
 }
 
-// 시간 입력 시 hours 자동계산
 function calcActivityHours() {
     let start = document.getElementById('act-start-time').value;
     let end   = document.getElementById('act-end-time').value;
@@ -272,9 +300,9 @@ function saveActivity() {
 
     function finishSave(photoData) {
         let actData = { startTime, endTime, hours, description, photo: photoData };
-        let acts = expTrips[currentTripIdx].dayLogs[currentDayIdx].activities;
-        if (editingActivityIdx >= 0) {
-            acts[editingActivityIdx] = actData;
+        let acts    = expTrips[currentTripIdx].dayLogs[currentDayIdx].activities;
+        if (editingActIdx >= 0) {
+            acts[editingActIdx] = actData;
         } else {
             acts.push(actData);
         }
@@ -289,9 +317,10 @@ function saveActivity() {
         reader.onload = function(e) { finishSave(e.target.result); };
         reader.readAsDataURL(photoFile);
     } else {
-        let existingPhoto = (editingActivityIdx >= 0 && expTrips[currentTripIdx].dayLogs[currentDayIdx].activities[editingActivityIdx])
-            ? expTrips[currentTripIdx].dayLogs[currentDayIdx].activities[editingActivityIdx].photo : null;
-        finishSave(existingPhoto);
+        let existing = (editingActIdx >= 0)
+            ? expTrips[currentTripIdx].dayLogs[currentDayIdx].activities[editingActIdx].photo
+            : null;
+        finishSave(existing);
     }
 }
 
@@ -304,7 +333,6 @@ function deleteActivity(tripIdx, dayIdx, actIdx) {
     }
 }
 
-// 사진 미리보기
 function previewActPhoto() {
     let file = document.getElementById('act-photo-input').files[0];
     if (file) {
@@ -325,16 +353,19 @@ function renderExpedition() {
     container.innerHTML = '';
 
     expTrips.forEach(function(trip, tIdx) {
-        // 총 시간 계산
         let totalHours = 0;
         trip.dayLogs.forEach(function(day) {
             day.activities.forEach(function(a) { totalHours += a.hours; });
         });
 
-        // Day logs HTML
         let dayLogsHtml = '';
         trip.dayLogs.forEach(function(day, dIdx) {
-            let dayHours = day.activities.reduce(function(s,a){ return s+a.hours; }, 0);
+            let dayHours   = day.activities.reduce(function(s,a){ return s+a.hours; }, 0);
+            let travelBadge = day.isTravel
+                ? '<span class="travel-badge">✈️ Travel Day</span>' : '';
+            let travelNote = day.isTravel
+                ? '<p class="travel-note">⚠️ Travel days may not count toward requirements. Please confirm with your advisor.</p>'
+                : '';
 
             let activitiesHtml = '';
             day.activities.forEach(function(act, aIdx) {
@@ -354,14 +385,15 @@ function renderExpedition() {
             });
 
             dayLogsHtml += `
-                <div class="exp-day-card" id="exp-day-${tIdx}-${dIdx}">
+                <div class="exp-day-card${day.isTravel ? ' travel-day' : ''}">
                     <div class="exp-day-header" onclick="toggleExpDay('exp-day-body-${tIdx}-${dIdx}', this)">
-                        <span class="exp-day-title">Day ${dIdx+1} — ${day.date}</span>
-                        <span class="exp-day-hours">${dayHours > 0 ? dayHours+' hrs' : 'No activities yet'}</span>
+                        <span class="exp-day-title">Day ${dIdx+1} — ${day.date} ${travelBadge}</span>
+                        <span class="exp-day-hours">${dayHours > 0 ? dayHours+' hrs' : '—'}</span>
                         <span class="exp-day-toggle">▼</span>
                     </div>
                     <div class="exp-day-body" id="exp-day-body-${tIdx}-${dIdx}" style="display:none">
-                        ${activitiesHtml || '<p class="no-logs">No activities yet. Tap "+ Add Activity".</p>'}
+                        ${travelNote}
+                        ${activitiesHtml || '<p class="no-logs">No activities yet.</p>'}
                         <button class="add-btn exp-add-act-btn" onclick="openActivityModal(${tIdx},${dIdx})">+ Add Activity</button>
                     </div>
                 </div>`;
@@ -375,9 +407,10 @@ function renderExpedition() {
                     <p class="trip-location">📍 ${trip.location}</p>
                     <p class="trip-dates">${trip.startDate} → ${trip.endDate}</p>
                     <p class="trip-stats">
-                        ${trip.days} days / ${trip.nights} nights
-                        ${trip.travelDays > 0 ? ' / '+trip.travelDays+' travel days' : ''}
-                        · <strong>${totalHours.toFixed(1)} hrs total</strong>
+                        ${trip.totalDays} total days
+                        / <strong>${trip.countableDays} countable</strong>
+                        / ${trip.nights} nights
+                        ${trip.travelDays > 0 ? ' ('+trip.travelDays+' travel days excluded)' : ''}
                     </p>
                     ${trip.validatorEmail ? '<p class="trip-validator">✉️ '+trip.validatorEmail+'</p>' : ''}
                 </div>
@@ -386,9 +419,7 @@ function renderExpedition() {
                     <button class="icon-btn delete-btn" onclick="deleteTrip(${tIdx})">🗑️</button>
                 </div>
             </div>
-            <div class="exp-days-container">
-                ${dayLogsHtml}
-            </div>`;
+            <div class="exp-days-container">${dayLogsHtml}</div>`;
         container.appendChild(div);
     });
 }
@@ -640,7 +671,8 @@ function updateDisplay(category) {
     let percent = 0;
     let completedDays = 0;
     if (sectionKey === 'exp') {
-        expTrips.forEach(function(t) { completedDays += (t.days || 0); });
+        // travel days 제외한 countableDays 기준
+        expTrips.forEach(function(t) { completedDays += (t.countableDays || t.days || 0); });
         percent = Math.min((completedDays / req.exp.days) * 100, 100);
     } else {
         percent = Math.min((totalHours / req[sectionKey].hours) * 100, 100);
@@ -655,10 +687,9 @@ function updateDisplay(category) {
     let textEl = document.getElementById(textId);
     if (sectionKey === 'exp') {
         let completedNights = expTrips.reduce(function(s,t){ return s+(t.nights||0); }, 0);
-        let nightsReq  = req.exp.nights;
-        let nightsDone = completedNights >= nightsReq && nightsReq > 0 ? ' ✅' : '';
-        let nightsStr  = nightsReq > 0
-            ? ' | ' + completedNights + ' / ' + nightsReq + ' nights' + nightsDone
+        let nightsReq = req.exp.nights;
+        let nightsStr = nightsReq > 0
+            ? ' | ' + completedNights + ' / ' + nightsReq + ' nights'
             : '';
         textEl.textContent =
             completedDays + ' / ' + req.exp.days + ' days' + nightsStr +
@@ -838,16 +869,18 @@ function exportCSV() {
 // ════════════════════════════════════════════
 
 function startApp() {
-    let name  = document.getElementById('setup-name').value.trim();
-    let level = document.getElementById('setup-level').value;
+    let name      = document.getElementById('setup-name').value.trim();
+    let level     = document.getElementById('setup-level').value;
+    let startDate = document.getElementById('setup-startdate').value;
 
-    if (!name)  { alert('Please enter your name!'); return; }
-    if (!level) { alert('Please select your target award level!'); return; }
+    if (!name)      { alert('Please enter your name!'); return; }
+    if (!level)     { alert('Please select your target award level!'); return; }
+    if (!startDate) { alert('Please select your program start date!'); return; }
 
     selectedLevel = level;
     localStorage.setItem('selectedLevel', level);
     localStorage.setItem('userName', name);
-    localStorage.setItem('startDate', today());
+    localStorage.setItem('startDate', startDate);
 
     document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('main-screen').style.display  = 'block';

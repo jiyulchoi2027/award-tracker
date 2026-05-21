@@ -1025,3 +1025,49 @@ header p {
     .exp-act-header { gap: 4px; }
     .exp-act-btns { margin-left: auto; }
 }
+
+/* ── Travel Day 표시 ── */
+.travel-badge {
+    font-size: 10px;
+    background: #fff3cd;
+    color: #856404;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    margin-left: 6px;
+}
+
+.travel-day .exp-day-header {
+    background: #fff8e6;
+}
+
+.travel-note {
+    font-size: 11px;
+    color: #856404;
+    background: #fff3cd;
+    padding: 6px 10px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.travel-warning {
+    font-size: 11px;
+    color: #856404;
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+.trip-nights-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    padding: 8px 10px;
+    background: #f0f4f8;
+    border-radius: 6px;
+    font-size: 13px;
+}
