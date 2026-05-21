@@ -78,6 +78,162 @@ function today() {
     return yyyy + '-' + mm + '-' + dd;
 }
 
+
+// ════════════════════════════════════════════
+// EXPEDITION — Trip 기록 (별도 구조)
+// ════════════════════════════════════════════
+
+// Expedition trips 데이터 (별도 저장)
+// trips = [{ location, startDate, endDate, nights, note, photo }]
+let expTrips = JSON.parse(localStorage.getItem('expTrips')) || [];
+
+function saveExpTrips() {
+    localStorage.setItem('expTrips', JSON.stringify(expTrips));
+}
+
+// Trip 모달 열기
+function openTripModal(editIdx) {
+    let editing = (editIdx !== undefined);
+    document.getElementById('trip-modal-title').textContent = editing ? 'Edit Trip' : 'Add Trip';
+    if (editing) {
+        let t = expTrips[editIdx];
+        document.getElementById('trip-location').value   = t.location || '';
+        document.getElementById('trip-start').value      = t.startDate || '';
+        document.getElementById('trip-end').value        = t.endDate || '';
+        document.getElementById('trip-nights').value     = t.nights || 0;
+        document.getElementById('trip-note').value       = t.note || '';
+        document.getElementById('trip-edit-idx').value   = editIdx;
+    } else {
+        document.getElementById('trip-location').value   = '';
+        document.getElementById('trip-start').value      = '';
+        document.getElementById('trip-end').value        = '';
+        document.getElementById('trip-nights').value     = 0;
+        document.getElementById('trip-note').value       = '';
+        document.getElementById('trip-edit-idx').value   = '';
+        document.getElementById('trip-photo-preview').style.display = 'none';
+    }
+    document.getElementById('trip-modal').style.display = 'flex';
+}
+
+function closeTripModal() {
+    document.getElementById('trip-modal').style.display = 'none';
+    document.getElementById('trip-photo-input').value = '';
+    document.getElementById('trip-photo-preview').style.display = 'none';
+}
+
+// 날짜 범위로 days 자동 계산
+function calcDays() {
+    let start = document.getElementById('trip-start').value;
+    let end   = document.getElementById('trip-end').value;
+    if (start && end && end >= start) {
+        let diff = Math.round((new Date(end) - new Date(start)) / (1000 * 60 * 60 * 24));
+        let days = diff + 1; // 시작일 포함
+        document.getElementById('trip-days-calc').textContent = days + ' day(s)';
+    } else {
+        document.getElementById('trip-days-calc').textContent = '';
+    }
+}
+
+function saveTrip() {
+    let location  = document.getElementById('trip-location').value.trim();
+    let startDate = document.getElementById('trip-start').value;
+    let endDate   = document.getElementById('trip-end').value;
+    let nights    = parseInt(document.getElementById('trip-nights').value) || 0;
+    let note      = document.getElementById('trip-note').value.trim();
+    let editIdx   = document.getElementById('trip-edit-idx').value;
+    let photoFile = document.getElementById('trip-photo-input').files[0];
+
+    if (!location)  { alert('Please enter a location!'); return; }
+    if (!startDate) { alert('Please select a start date!'); return; }
+    if (!endDate)   { alert('Please select an end date!'); return; }
+    if (endDate < startDate) { alert('End date must be after start date!'); return; }
+    if (nights < 0) { alert('Nights cannot be negative!'); return; }
+
+    let todayStr = today();
+    if (startDate > todayStr) { alert('Future dates are not allowed!'); return; }
+
+    // days 계산
+    let diff = Math.round((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24));
+    let days = diff + 1;
+
+    let tripData = { location, startDate, endDate, days, nights, note, photo: null };
+
+    function finishSave(photoData) {
+        tripData.photo = photoData;
+        if (editIdx !== '') {
+            expTrips[parseInt(editIdx)] = tripData;
+        } else {
+            expTrips.push(tripData);
+        }
+        saveExpTrips();
+        renderExpedition();
+        updateDisplay('Expedition');
+        closeTripModal();
+    }
+
+    if (photoFile) {
+        let reader = new FileReader();
+        reader.onload = function(e) { finishSave(e.target.result); };
+        reader.readAsDataURL(photoFile);
+    } else {
+        // 편집 시 기존 사진 유지
+        let existingPhoto = (editIdx !== '' && expTrips[parseInt(editIdx)])
+            ? expTrips[parseInt(editIdx)].photo : null;
+        finishSave(existingPhoto);
+    }
+}
+
+function deleteTrip(idx) {
+    if (confirm('Delete this expedition trip?')) {
+        expTrips.splice(idx, 1);
+        saveExpTrips();
+        renderExpedition();
+        updateDisplay('Expedition');
+    }
+}
+
+// 사진 미리보기
+function previewTripPhoto() {
+    let file = document.getElementById('trip-photo-input').files[0];
+    if (file) {
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            let preview = document.getElementById('trip-photo-preview');
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// Expedition 탭 렌더링
+function renderExpedition() {
+    let container = document.getElementById('exp-trips-list');
+    if (!container) return;
+    container.innerHTML = '';
+
+    expTrips.forEach(function(trip, idx) {
+        let div = document.createElement('div');
+        div.className = 'trip-card';
+        div.innerHTML = `
+            <div class="trip-header">
+                <div class="trip-header-left">
+                    <p class="trip-location">📍 ${trip.location}</p>
+                    <p class="trip-dates">${trip.startDate} → ${trip.endDate}</p>
+                    <p class="trip-stats">${trip.days} day(s) / ${trip.nights} night(s)</p>
+                    ${trip.note ? '<p class="trip-note">' + trip.note + '</p>' : ''}
+                </div>
+                <div class="trip-header-right">
+                    <button class="icon-btn edit-btn" onclick="openTripModal(${idx})">✏️</button>
+                    <button class="icon-btn delete-btn" onclick="deleteTrip(${idx})">🗑️</button>
+                </div>
+            </div>
+            ${trip.photo ? '<img src="' + trip.photo + '" class="trip-photo">' : ''}
+        `;
+        container.appendChild(div);
+    });
+}
+
 // ════════════════════════════════════════════
 // GOAL 모달
 // ════════════════════════════════════════════
@@ -316,9 +472,8 @@ function updateDisplay(category) {
     let percent = 0;
     let completedDays = 0;
     if (sectionKey === 'exp') {
-        goals['Expedition'].forEach(function(g) {
-            g.activityTypes.forEach(function(act) { completedDays += act.logs.length; });
-        });
+        // Expedition: trips 기반으로 days/nights 집계
+        expTrips.forEach(function(t) { completedDays += (t.days || 0); });
         percent = Math.min((completedDays / req.exp.days) * 100, 100);
     } else {
         percent = Math.min((totalHours / req[sectionKey].hours) * 100, 100);
@@ -332,10 +487,14 @@ function updateDisplay(category) {
     // 텍스트
     let textEl = document.getElementById(textId);
     if (sectionKey === 'exp') {
+        let completedNights = expTrips.reduce(function(s,t){ return s+(t.nights||0); }, 0);
+        let nightsReq = req.exp.nights;
+        let nightsStr = nightsReq > 0
+            ? ' | ' + completedNights + ' / ' + nightsReq + ' nights'
+            : '';
         textEl.textContent =
-            completedDays + ' / ' + req.exp.days + ' days completed' +
-            (req.exp.nights > 0 ? ' (' + req.exp.nights + ' nights required)' : '') +
-            ' — ' + selectedLevel;
+            completedDays + ' / ' + req.exp.days + ' days' + nightsStr +
+            ' — ' + selectedLevel + (percent >= 100 ? ' ✅' : '');
     } else {
         let done = percent >= 100 ? ' ✅' : '';
         textEl.textContent =
@@ -528,6 +687,7 @@ function startApp() {
 
     CATS.forEach(function(c) { updateDisplay(c); });
     updateBadges(level);
+    renderExpedition();
     showTab('vps'); // 항상 첫 탭으로 시작
 }
 
@@ -607,6 +767,7 @@ window.onload = function() {
             renderGoals(c);
         });
         updateBadges(savedLevel);
+        renderExpedition();
         // 마지막으로 열었던 탭 복원
         let lastTab = localStorage.getItem('activeTab') || 'vps';
         showTab(lastTab);
