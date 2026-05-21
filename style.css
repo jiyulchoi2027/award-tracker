@@ -870,3 +870,158 @@ header p {
     border-radius: 8px;
     margin-top: 10px;
 }
+
+/* ── Trip 카드 ── */
+.trip-card {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-top: 10px;
+    border: 1px solid #dde4ec;
+}
+
+.trip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.trip-header-left { flex: 1; min-width: 0; }
+.trip-header-right { display: flex; gap: 6px; flex-shrink: 0; }
+
+.trip-location {
+    font-weight: bold;
+    font-size: 14px;
+    color: #1a3a6b;
+    margin-bottom: 3px;
+}
+
+.trip-dates {
+    font-size: 12px;
+    color: #555;
+    margin-bottom: 2px;
+}
+
+.trip-stats {
+    font-size: 12px;
+    color: #444;
+    margin-bottom: 2px;
+}
+
+.trip-validator {
+    font-size: 11px;
+    color: #999;
+    margin-top: 2px;
+}
+
+/* ── Day 카드 ── */
+.exp-days-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.exp-day-card {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e8edf3;
+    overflow: hidden;
+}
+
+.exp-day-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    background: #f0f4f8;
+    user-select: none;
+}
+
+.exp-day-header:active { background: #e0e8f0; }
+
+.exp-day-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: #1a3a6b;
+    flex: 1;
+}
+
+.exp-day-hours {
+    font-size: 12px;
+    color: #555;
+    font-weight: 600;
+}
+
+.exp-day-toggle {
+    font-size: 11px;
+    color: #999;
+    flex-shrink: 0;
+}
+
+.exp-day-body {
+    padding: 10px 12px;
+    border-top: 1px solid #e8edf3;
+}
+
+/* ── Activity 항목 ── */
+.exp-activity {
+    background: #f8fafc;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    border-left: 3px solid #1a3a6b;
+}
+
+.exp-act-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+}
+
+.exp-act-time {
+    font-size: 12px;
+    font-weight: bold;
+    color: #1a3a6b;
+}
+
+.exp-act-hours {
+    font-size: 12px;
+    color: #27ae60;
+    font-weight: bold;
+}
+
+.exp-act-btns {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+}
+
+.exp-act-desc {
+    font-size: 12px;
+    color: #555;
+    line-height: 1.4;
+}
+
+.exp-act-photo {
+    width: 100%;
+    max-height: 180px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-top: 8px;
+}
+
+.exp-add-act-btn {
+    margin-top: 8px;
+    width: 100%;
+    font-size: 13px;
+}
+
+@media (max-width: 600px) {
+    .exp-act-header { gap: 4px; }
+    .exp-act-btns { margin-left: auto; }
+}

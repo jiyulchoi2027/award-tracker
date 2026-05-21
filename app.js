@@ -80,111 +80,121 @@ function today() {
 
 
 // ════════════════════════════════════════════
-// EXPEDITION — Trip 기록 (별도 구조)
+// EXPEDITION — Trip 기록
 // ════════════════════════════════════════════
 
-// Expedition trips 데이터 (별도 저장)
-// trips = [{ location, startDate, endDate, nights, note, photo }]
+// 데이터 구조:
+// expTrips = [{
+//   location, startDate, endDate, days, nights, travelDays, validatorEmail,
+//   dayLogs: [{
+//     date, activities: [{ startTime, endTime, hours, description, photo }]
+//   }]
+// }]
+
 let expTrips = JSON.parse(localStorage.getItem('expTrips')) || [];
+let currentTripIdx = -1;
+let currentDayIdx  = -1;
+let editingTripIdx = -1;
 
 function saveExpTrips() {
     localStorage.setItem('expTrips', JSON.stringify(expTrips));
 }
 
-// Trip 모달 열기
-function openTripModal(editIdx) {
-    let editing = (editIdx !== undefined);
-    document.getElementById('trip-modal-title').textContent = editing ? 'Edit Trip' : 'Add Trip';
-    if (editing) {
-        let t = expTrips[editIdx];
-        document.getElementById('trip-location').value   = t.location || '';
-        document.getElementById('trip-start').value      = t.startDate || '';
-        document.getElementById('trip-end').value        = t.endDate || '';
-        document.getElementById('trip-nights').value     = t.nights || 0;
-        document.getElementById('trip-note').value       = t.note || '';
-        document.getElementById('trip-edit-idx').value   = editIdx;
+// ── Trip 날짜 계산 ──
+function calcTripDays() {
+    let start = document.getElementById('trip-start').value;
+    let end   = document.getElementById('trip-end').value;
+    if (start && end && end >= start) {
+        let diff = Math.round((new Date(end) - new Date(start)) / (1000*60*60*24));
+        let days = diff + 1;
+        document.getElementById('trip-days-calc').textContent = days + ' day(s)';
+        document.getElementById('trip-days-calc').style.display = 'block';
     } else {
-        document.getElementById('trip-location').value   = '';
-        document.getElementById('trip-start').value      = '';
-        document.getElementById('trip-end').value        = '';
-        document.getElementById('trip-nights').value     = 0;
-        document.getElementById('trip-note').value       = '';
-        document.getElementById('trip-edit-idx').value   = '';
-        document.getElementById('trip-photo-preview').style.display = 'none';
+        document.getElementById('trip-days-calc').style.display = 'none';
+    }
+}
+
+// ── Trip 모달 ──
+function openTripModal(editIdx) {
+    editingTripIdx = (editIdx !== undefined) ? Number(editIdx) : -1;
+    document.getElementById('trip-modal-title').textContent =
+        editingTripIdx >= 0 ? 'Edit Trip' : 'Add Trip';
+
+    if (editingTripIdx >= 0) {
+        let t = expTrips[editingTripIdx];
+        document.getElementById('trip-location').value      = t.location      || '';
+        document.getElementById('trip-start').value         = t.startDate     || '';
+        document.getElementById('trip-end').value           = t.endDate       || '';
+        document.getElementById('trip-nights').value        = t.nights        || 0;
+        document.getElementById('trip-travel-days').value   = t.travelDays    || 0;
+        document.getElementById('trip-validator').value     = t.validatorEmail|| '';
+        calcTripDays();
+    } else {
+        document.getElementById('trip-location').value      = '';
+        document.getElementById('trip-start').value         = '';
+        document.getElementById('trip-end').value           = '';
+        document.getElementById('trip-nights').value        = 0;
+        document.getElementById('trip-travel-days').value   = 0;
+        document.getElementById('trip-validator').value     = '';
+        document.getElementById('trip-days-calc').style.display = 'none';
     }
     document.getElementById('trip-modal').style.display = 'flex';
 }
 
 function closeTripModal() {
     document.getElementById('trip-modal').style.display = 'none';
-    document.getElementById('trip-photo-input').value = '';
-    document.getElementById('trip-photo-preview').style.display = 'none';
-}
-
-// 날짜 범위로 days 자동 계산
-function calcDays() {
-    let start = document.getElementById('trip-start').value;
-    let end   = document.getElementById('trip-end').value;
-    if (start && end && end >= start) {
-        let diff = Math.round((new Date(end) - new Date(start)) / (1000 * 60 * 60 * 24));
-        let days = diff + 1; // 시작일 포함
-        document.getElementById('trip-days-calc').textContent = days + ' day(s)';
-    } else {
-        document.getElementById('trip-days-calc').textContent = '';
-    }
+    editingTripIdx = -1;
 }
 
 function saveTrip() {
-    let location  = document.getElementById('trip-location').value.trim();
-    let startDate = document.getElementById('trip-start').value;
-    let endDate   = document.getElementById('trip-end').value;
-    let nights    = parseInt(document.getElementById('trip-nights').value) || 0;
-    let note      = document.getElementById('trip-note').value.trim();
-    let editIdx   = document.getElementById('trip-edit-idx').value;
-    let photoFile = document.getElementById('trip-photo-input').files[0];
+    let location       = document.getElementById('trip-location').value.trim();
+    let startDate      = document.getElementById('trip-start').value;
+    let endDate        = document.getElementById('trip-end').value;
+    let nights         = parseInt(document.getElementById('trip-nights').value)      || 0;
+    let travelDays     = parseInt(document.getElementById('trip-travel-days').value) || 0;
+    let validatorEmail = document.getElementById('trip-validator').value.trim();
 
-    if (!location)  { alert('Please enter a location!'); return; }
+    if (!location)  { alert('Please enter a location!');    return; }
     if (!startDate) { alert('Please select a start date!'); return; }
-    if (!endDate)   { alert('Please select an end date!'); return; }
+    if (!endDate)   { alert('Please select an end date!');  return; }
     if (endDate < startDate) { alert('End date must be after start date!'); return; }
-    if (nights < 0) { alert('Nights cannot be negative!'); return; }
 
-    let todayStr = today();
-    if (startDate > todayStr) { alert('Future dates are not allowed!'); return; }
-
-    // days 계산
-    let diff = Math.round((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24));
+    let diff = Math.round((new Date(endDate) - new Date(startDate)) / (1000*60*60*24));
     let days = diff + 1;
 
-    let tripData = { location, startDate, endDate, days, nights, note, photo: null };
+    // 기존 dayLogs 유지 (편집 시)
+    let existingDayLogs = (editingTripIdx >= 0 && expTrips[editingTripIdx])
+        ? expTrips[editingTripIdx].dayLogs : [];
 
-    function finishSave(photoData) {
-        tripData.photo = photoData;
-        if (editIdx !== '') {
-            expTrips[parseInt(editIdx)] = tripData;
-        } else {
-            expTrips.push(tripData);
-        }
-        saveExpTrips();
-        renderExpedition();
-        updateDisplay('Expedition');
-        closeTripModal();
+    // dayLogs: days 수만큼 자동 생성 (없는 날짜만 추가)
+    let dayLogs = [];
+    for (let i = 0; i < days; i++) {
+        let d = new Date(startDate);
+        d.setDate(d.getDate() + i);
+        let dateStr = d.getFullYear() + '-'
+            + String(d.getMonth()+1).padStart(2,'0') + '-'
+            + String(d.getDate()).padStart(2,'0');
+        // 기존 dayLog 있으면 유지
+        let existing = existingDayLogs.find(function(dl){ return dl.date === dateStr; });
+        dayLogs.push(existing || { date: dateStr, activities: [] });
     }
 
-    if (photoFile) {
-        let reader = new FileReader();
-        reader.onload = function(e) { finishSave(e.target.result); };
-        reader.readAsDataURL(photoFile);
+    let tripData = { location, startDate, endDate, days, nights, travelDays, validatorEmail, dayLogs };
+
+    if (editingTripIdx >= 0) {
+        expTrips[editingTripIdx] = tripData;
     } else {
-        // 편집 시 기존 사진 유지
-        let existingPhoto = (editIdx !== '' && expTrips[parseInt(editIdx)])
-            ? expTrips[parseInt(editIdx)].photo : null;
-        finishSave(existingPhoto);
+        expTrips.push(tripData);
     }
+
+    saveExpTrips();
+    renderExpedition();
+    updateDisplay('Expedition');
+    closeTripModal();
 }
 
 function deleteTrip(idx) {
-    if (confirm('Delete this expedition trip?')) {
+    if (confirm('Delete this trip and all daily logs?')) {
         expTrips.splice(idx, 1);
         saveExpTrips();
         renderExpedition();
@@ -192,27 +202,171 @@ function deleteTrip(idx) {
     }
 }
 
+// ── Activity 모달 (Day 안의 시간대별 활동) ──
+let editingActivityIdx = -1;
+
+function openActivityModal(tripIdx, dayIdx, actIdx) {
+    currentTripIdx    = Number(tripIdx);
+    currentDayIdx     = Number(dayIdx);
+    editingActivityIdx = (actIdx !== undefined) ? Number(actIdx) : -1;
+
+    let dayDate = expTrips[tripIdx].dayLogs[dayIdx].date;
+    document.getElementById('act-modal-title').textContent =
+        (editingActivityIdx >= 0 ? 'Edit Activity' : 'Add Activity') +
+        ' — Day ' + (dayIdx+1) + ' (' + dayDate + ')';
+
+    if (editingActivityIdx >= 0) {
+        let a = expTrips[tripIdx].dayLogs[dayIdx].activities[editingActivityIdx];
+        document.getElementById('act-start-time').value  = a.startTime  || '';
+        document.getElementById('act-end-time').value    = a.endTime    || '';
+        document.getElementById('act-description').value = a.description|| '';
+        document.getElementById('act-photo-preview').style.display = a.photo ? 'block' : 'none';
+        if (a.photo) document.getElementById('act-photo-preview').src = a.photo;
+    } else {
+        document.getElementById('act-start-time').value  = '';
+        document.getElementById('act-end-time').value    = '';
+        document.getElementById('act-description').value = '';
+        document.getElementById('act-photo-preview').style.display = 'none';
+        document.getElementById('act-photo-input').value = '';
+    }
+    calcActivityHours();
+    document.getElementById('act-modal').style.display = 'flex';
+}
+
+function closeActivityModal() {
+    document.getElementById('act-modal').style.display = 'none';
+    currentTripIdx = -1; currentDayIdx = -1; editingActivityIdx = -1;
+}
+
+// 시간 입력 시 hours 자동계산
+function calcActivityHours() {
+    let start = document.getElementById('act-start-time').value;
+    let end   = document.getElementById('act-end-time').value;
+    if (start && end) {
+        let [sh,sm] = start.split(':').map(Number);
+        let [eh,em] = end.split(':').map(Number);
+        let mins = (eh*60+em) - (sh*60+sm);
+        if (mins > 0) {
+            let hrs = (mins/60).toFixed(1);
+            document.getElementById('act-hours-calc').textContent = hrs + ' hrs';
+            document.getElementById('act-hours-calc').style.display = 'block';
+            return parseFloat(hrs);
+        }
+    }
+    document.getElementById('act-hours-calc').style.display = 'none';
+    return 0;
+}
+
+function saveActivity() {
+    let startTime   = document.getElementById('act-start-time').value;
+    let endTime     = document.getElementById('act-end-time').value;
+    let description = document.getElementById('act-description').value.trim();
+    let photoFile   = document.getElementById('act-photo-input').files[0];
+
+    if (!startTime)   { alert('Please enter start time!');      return; }
+    if (!endTime)     { alert('Please enter end time!');        return; }
+    if (!description) { alert('Please describe the activity!'); return; }
+
+    let hours = calcActivityHours();
+    if (hours <= 0) { alert('End time must be after start time!'); return; }
+
+    function finishSave(photoData) {
+        let actData = { startTime, endTime, hours, description, photo: photoData };
+        let acts = expTrips[currentTripIdx].dayLogs[currentDayIdx].activities;
+        if (editingActivityIdx >= 0) {
+            acts[editingActivityIdx] = actData;
+        } else {
+            acts.push(actData);
+        }
+        saveExpTrips();
+        renderExpedition();
+        updateDisplay('Expedition');
+        closeActivityModal();
+    }
+
+    if (photoFile) {
+        let reader = new FileReader();
+        reader.onload = function(e) { finishSave(e.target.result); };
+        reader.readAsDataURL(photoFile);
+    } else {
+        let existingPhoto = (editingActivityIdx >= 0 && expTrips[currentTripIdx].dayLogs[currentDayIdx].activities[editingActivityIdx])
+            ? expTrips[currentTripIdx].dayLogs[currentDayIdx].activities[editingActivityIdx].photo : null;
+        finishSave(existingPhoto);
+    }
+}
+
+function deleteActivity(tripIdx, dayIdx, actIdx) {
+    if (confirm('Delete this activity?')) {
+        expTrips[tripIdx].dayLogs[dayIdx].activities.splice(actIdx, 1);
+        saveExpTrips();
+        renderExpedition();
+        updateDisplay('Expedition');
+    }
+}
+
 // 사진 미리보기
-function previewTripPhoto() {
-    let file = document.getElementById('trip-photo-input').files[0];
+function previewActPhoto() {
+    let file = document.getElementById('act-photo-input').files[0];
     if (file) {
         let reader = new FileReader();
         reader.onload = function(e) {
-            let preview = document.getElementById('trip-photo-preview');
-            preview.src = e.target.result;
-            preview.style.display = 'block';
+            let prev = document.getElementById('act-photo-preview');
+            prev.src = e.target.result;
+            prev.style.display = 'block';
         };
         reader.readAsDataURL(file);
     }
 }
 
-// Expedition 탭 렌더링
+// ── Expedition 렌더링 ──
 function renderExpedition() {
     let container = document.getElementById('exp-trips-list');
     if (!container) return;
     container.innerHTML = '';
 
-    expTrips.forEach(function(trip, idx) {
+    expTrips.forEach(function(trip, tIdx) {
+        // 총 시간 계산
+        let totalHours = 0;
+        trip.dayLogs.forEach(function(day) {
+            day.activities.forEach(function(a) { totalHours += a.hours; });
+        });
+
+        // Day logs HTML
+        let dayLogsHtml = '';
+        trip.dayLogs.forEach(function(day, dIdx) {
+            let dayHours = day.activities.reduce(function(s,a){ return s+a.hours; }, 0);
+
+            let activitiesHtml = '';
+            day.activities.forEach(function(act, aIdx) {
+                activitiesHtml += `
+                    <div class="exp-activity">
+                        <div class="exp-act-header">
+                            <span class="exp-act-time">${act.startTime} – ${act.endTime}</span>
+                            <span class="exp-act-hours">${act.hours} hrs</span>
+                            <div class="exp-act-btns">
+                                <button class="icon-btn edit-btn" onclick="openActivityModal(${tIdx},${dIdx},${aIdx})">✏️</button>
+                                <button class="icon-btn delete-btn" onclick="deleteActivity(${tIdx},${dIdx},${aIdx})">🗑️</button>
+                            </div>
+                        </div>
+                        <p class="exp-act-desc">${act.description}</p>
+                        ${act.photo ? '<img src="'+act.photo+'" class="exp-act-photo">' : ''}
+                    </div>`;
+            });
+
+            dayLogsHtml += `
+                <div class="exp-day-card" id="exp-day-${tIdx}-${dIdx}">
+                    <div class="exp-day-header" onclick="toggleExpDay('exp-day-body-${tIdx}-${dIdx}', this)">
+                        <span class="exp-day-title">Day ${dIdx+1} — ${day.date}</span>
+                        <span class="exp-day-hours">${dayHours > 0 ? dayHours+' hrs' : 'No activities yet'}</span>
+                        <span class="exp-day-toggle">▼</span>
+                    </div>
+                    <div class="exp-day-body" id="exp-day-body-${tIdx}-${dIdx}" style="display:none">
+                        ${activitiesHtml || '<p class="no-logs">No activities yet. Tap "+ Add Activity".</p>'}
+                        <button class="add-btn exp-add-act-btn" onclick="openActivityModal(${tIdx},${dIdx})">+ Add Activity</button>
+                    </div>
+                </div>`;
+        });
+
         let div = document.createElement('div');
         div.className = 'trip-card';
         div.innerHTML = `
@@ -220,18 +374,32 @@ function renderExpedition() {
                 <div class="trip-header-left">
                     <p class="trip-location">📍 ${trip.location}</p>
                     <p class="trip-dates">${trip.startDate} → ${trip.endDate}</p>
-                    <p class="trip-stats">${trip.days} day(s) / ${trip.nights} night(s)</p>
-                    ${trip.note ? '<p class="trip-note">' + trip.note + '</p>' : ''}
+                    <p class="trip-stats">
+                        ${trip.days} days / ${trip.nights} nights
+                        ${trip.travelDays > 0 ? ' / '+trip.travelDays+' travel days' : ''}
+                        · <strong>${totalHours.toFixed(1)} hrs total</strong>
+                    </p>
+                    ${trip.validatorEmail ? '<p class="trip-validator">✉️ '+trip.validatorEmail+'</p>' : ''}
                 </div>
                 <div class="trip-header-right">
-                    <button class="icon-btn edit-btn" onclick="openTripModal(${idx})">✏️</button>
-                    <button class="icon-btn delete-btn" onclick="deleteTrip(${idx})">🗑️</button>
+                    <button class="icon-btn edit-btn" onclick="openTripModal(${tIdx})">✏️</button>
+                    <button class="icon-btn delete-btn" onclick="deleteTrip(${tIdx})">🗑️</button>
                 </div>
             </div>
-            ${trip.photo ? '<img src="' + trip.photo + '" class="trip-photo">' : ''}
-        `;
+            <div class="exp-days-container">
+                ${dayLogsHtml}
+            </div>`;
         container.appendChild(div);
     });
+}
+
+function toggleExpDay(bodyId, headerEl) {
+    let body = document.getElementById(bodyId);
+    if (!body) return;
+    let isOpen = body.style.display !== 'none';
+    body.style.display = isOpen ? 'none' : 'block';
+    let toggle = headerEl.querySelector('.exp-day-toggle');
+    if (toggle) toggle.textContent = isOpen ? '▼' : '▲';
 }
 
 // ════════════════════════════════════════════
@@ -472,7 +640,6 @@ function updateDisplay(category) {
     let percent = 0;
     let completedDays = 0;
     if (sectionKey === 'exp') {
-        // Expedition: trips 기반으로 days/nights 집계
         expTrips.forEach(function(t) { completedDays += (t.days || 0); });
         percent = Math.min((completedDays / req.exp.days) * 100, 100);
     } else {
@@ -488,9 +655,10 @@ function updateDisplay(category) {
     let textEl = document.getElementById(textId);
     if (sectionKey === 'exp') {
         let completedNights = expTrips.reduce(function(s,t){ return s+(t.nights||0); }, 0);
-        let nightsReq = req.exp.nights;
-        let nightsStr = nightsReq > 0
-            ? ' | ' + completedNights + ' / ' + nightsReq + ' nights'
+        let nightsReq  = req.exp.nights;
+        let nightsDone = completedNights >= nightsReq && nightsReq > 0 ? ' ✅' : '';
+        let nightsStr  = nightsReq > 0
+            ? ' | ' + completedNights + ' / ' + nightsReq + ' nights' + nightsDone
             : '';
         textEl.textContent =
             completedDays + ' / ' + req.exp.days + ' days' + nightsStr +

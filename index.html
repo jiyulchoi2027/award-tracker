@@ -185,32 +185,63 @@
     <div id="trip-modal" class="modal-overlay" style="display:none">
         <div class="modal">
             <h3 id="trip-modal-title">Add Trip</h3>
-            <label>Location / Trip Name</label>
+            <label>Location</label>
             <input type="text" id="trip-location" class="input-field"
-                   placeholder="e.g. Appalachian Trail, GA">
+                   placeholder="e.g. Destin & Pensacola, Florida">
             <label>Start Date</label>
             <input type="date" id="trip-start" class="input-field"
-                   onchange="calcDays()">
+                   onchange="calcTripDays()">
             <label>End Date</label>
             <input type="date" id="trip-end" class="input-field"
-                   onchange="calcDays()">
-            <p class="modal-hint" id="trip-days-calc" style="color:#1a3a6b;font-weight:bold;"></p>
+                   onchange="calcTripDays()">
+            <p class="modal-hint trip-days-calc" id="trip-days-calc"
+               style="display:none; color:#1a3a6b; font-weight:bold;"></p>
             <label>Overnight Stays (nights)</label>
             <input type="number" id="trip-nights" class="input-field"
                    placeholder="0" min="0" step="1" value="0">
-            <label>Notes <span style="font-weight:normal;color:#aaa;">(optional)</span></label>
-            <input type="text" id="trip-note" class="input-field"
-                   placeholder="e.g. Hiked 10 miles, river crossing">
-            <label>Photo <span style="font-weight:normal;color:#aaa;">(optional)</span></label>
-            <input type="file" id="trip-photo-input" class="input-field"
-                   accept="image/*" onchange="previewTripPhoto()">
-            <img id="trip-photo-preview" src="" alt="Preview"
-                 style="display:none; width:100%; max-height:180px; object-fit:cover;
-                        border-radius:8px; margin-bottom:10px;">
-            <input type="hidden" id="trip-edit-idx" value="">
+            <label>Travel Days</label>
+            <input type="number" id="trip-travel-days" class="input-field"
+                   placeholder="0" min="0" step="1" value="0">
+            <label>Validator Email</label>
+            <input type="email" id="trip-validator" class="input-field"
+                   placeholder="e.g. advisor@school.edu">
             <div class="modal-buttons">
                 <button class="save-btn" onclick="saveTrip()">Save Trip</button>
                 <button class="cancel-btn" onclick="closeTripModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Activity 모달 (Day별 시간대 활동) ── -->
+    <div id="act-modal" class="modal-overlay" style="display:none">
+        <div class="modal">
+            <h3 id="act-modal-title">Add Activity</h3>
+            <div style="display:flex; gap:10px;">
+                <div style="flex:1;">
+                    <label>Start Time</label>
+                    <input type="time" id="act-start-time" class="input-field"
+                           onchange="calcActivityHours()">
+                </div>
+                <div style="flex:1;">
+                    <label>End Time</label>
+                    <input type="time" id="act-end-time" class="input-field"
+                           onchange="calcActivityHours()">
+                </div>
+            </div>
+            <p class="modal-hint" id="act-hours-calc"
+               style="display:none; color:#1a3a6b; font-weight:bold;"></p>
+            <label>Description</label>
+            <textarea id="act-description" class="input-field" rows="3"
+                      placeholder="e.g. Marine Biology Observation. Conducted snorkeling at Miramar Beach..."></textarea>
+            <label>Photo <span style="font-weight:normal;color:#aaa;">(optional)</span></label>
+            <input type="file" id="act-photo-input" class="input-field"
+                   accept="image/*" onchange="previewActPhoto()">
+            <img id="act-photo-preview" src="" alt="Preview"
+                 style="display:none; width:100%; max-height:160px;
+                        object-fit:cover; border-radius:8px; margin-bottom:10px;">
+            <div class="modal-buttons">
+                <button class="save-btn" onclick="saveActivity()">Save</button>
+                <button class="cancel-btn" onclick="closeActivityModal()">Cancel</button>
             </div>
         </div>
     </div>
