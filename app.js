@@ -421,20 +421,39 @@ function renderGoals(category) {
         div.className = 'goal-card';
         div.innerHTML = `
             <div class="goal-header">
-                <div>
+                <div class="goal-header-left">
                     <p class="goal-title">📌 ${goal.name}</p>
                     <p class="goal-meta">Validator: ${goal.validator || 'Not set'}&nbsp;|&nbsp;${goal.email || '—'}</p>
                 </div>
-                <div class="goal-total">${goalHours} hrs<br><span>${goalSessions} sessions</span></div>
+                <div class="goal-header-right">
+                    <span class="goal-total">${goalHours} hrs<br><small>${goalSessions} sessions</small></span>
+                    <button class="icon-btn edit-btn" onclick="openGoalModal('${category}',${gIdx})">✏️</button>
+                    <button class="icon-btn delete-btn" onclick="deleteGoal('${category}',${gIdx})">🗑️</button>
+                </div>
             </div>
             ${actTypesHtml}
             <div class="goal-footer">
-                <button class="add-btn"    onclick="openActivityTypeModal('${category}',${gIdx})">+ Add Activity Type</button>
-                <button class="edit-btn"   onclick="openGoalModal('${category}',${gIdx})">✏️ Edit Goal</button>
-                <button class="delete-btn" onclick="deleteGoal('${category}',${gIdx})">🗑️ Delete Goal</button>
+                <button class="add-btn" onclick="openActivityTypeModal('${category}',${gIdx})">+ Add Activity Type</button>
             </div>`;
         container.appendChild(div);
     });
+}
+
+// ── Tab Navigation ──
+function showTab(tab) {
+    // 모든 탭 콘텐츠 숨기기
+    document.querySelectorAll('.tab-content').forEach(function(el) {
+        el.classList.remove('active');
+    });
+    // 모든 탭 버튼 비활성화
+    document.querySelectorAll('.tab-btn').forEach(function(el) {
+        el.classList.remove('active');
+    });
+    // 선택한 탭 활성화
+    document.getElementById('content-' + tab).classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
+    // 현재 탭 localStorage에 저장 (새로고침 후 복원)
+    localStorage.setItem('activeTab', tab);
 }
 
 // 로그 접기/펼치기
@@ -509,6 +528,7 @@ function startApp() {
 
     CATS.forEach(function(c) { updateDisplay(c); });
     updateBadges(level);
+    showTab('vps'); // 항상 첫 탭으로 시작
 }
 
 // ════════════════════════════════════════════
@@ -587,5 +607,8 @@ window.onload = function() {
             renderGoals(c);
         });
         updateBadges(savedLevel);
+        // 마지막으로 열었던 탭 복원
+        let lastTab = localStorage.getItem('activeTab') || 'vps';
+        showTab(lastTab);
     }
 };
