@@ -42,7 +42,8 @@
         <p id="header-name"></p>
         <p>Built by Kyle (Jiyul) Choi — Mill Creek High School, Class of 2026</p>
         <div class="header-btns">
-            <button class="add-btn" onclick="exportCSV()">📤 Export for Submittable</button>
+            <button class="add-btn" onclick="exportCSV()">📤 Export CSV</button>
+
             <button class="reset-btn" onclick="openSettingsModal()">⚙️ Settings</button>
         </div>
     </header>
@@ -81,7 +82,10 @@
                 <p class="progress-text" id="vps-text">0 / 200 hours completed (Silver Medal)</p>
                 <p class="progress-text" id="vps-months">Active months: 0 / 12 months</p>
                 <div id="vps-goals"></div>
-                <button class="add-btn" onclick="openGoalModal('Voluntary Public Service')">+ Add Goal</button>
+                <div class="section-btn-row">
+                    <button class="add-btn" onclick="openGoalModal('Voluntary Public Service')">+ Add Goal</button>
+                    <button class="export-btn" onclick="exportXLSX('Voluntary Public Service')">📤 Export</button>
+                </div>
             </div>
         </div>
 
@@ -97,7 +101,10 @@
                 <p class="progress-text" id="pd-text">0 / 100 hours completed (Silver Medal)</p>
                 <p class="progress-text" id="pd-months">Active months: 0 / 12 months</p>
                 <div id="pd-goals"></div>
-                <button class="add-btn" onclick="openGoalModal('Personal Development')">+ Add Goal</button>
+                <div class="section-btn-row">
+                    <button class="add-btn" onclick="openGoalModal('Personal Development')">+ Add Goal</button>
+                    <button class="export-btn" onclick="exportXLSX('Personal Development')">📤 Export</button>
+                </div>
             </div>
         </div>
 
@@ -113,7 +120,10 @@
                 <p class="progress-text" id="pf-text">0 / 100 hours completed (Silver Medal)</p>
                 <p class="progress-text" id="pf-months">Active months: 0 / 12 months</p>
                 <div id="pf-goals"></div>
-                <button class="add-btn" onclick="openGoalModal('Physical Fitness')">+ Add Goal</button>
+                <div class="section-btn-row">
+                    <button class="add-btn" onclick="openGoalModal('Physical Fitness')">+ Add Goal</button>
+                    <button class="export-btn" onclick="exportXLSX('Physical Fitness')">📤 Export</button>
+                </div>
             </div>
         </div>
 
@@ -128,7 +138,10 @@
                 </div>
                 <p class="progress-text" id="exp-text">0 / 3 days — Silver Medal</p>
                 <div id="exp-trips-list"></div>
-                <button class="add-btn" onclick="openTripModal()">+ Add Trip</button>
+                <div class="section-btn-row">
+                    <button class="add-btn" onclick="openTripModal()">+ Add Trip</button>
+                    <button class="export-btn" onclick="exportXLSX('Expedition')">📤 Export</button>
+                </div>
             </div>
         </div>
 
@@ -255,6 +268,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <script src="app.js"></script>
 </div>
 </body>
