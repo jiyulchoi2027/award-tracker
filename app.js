@@ -616,11 +616,12 @@ function saveLog() {
     let logs = goals[currentCategory][currentGoalIndex].activityTypes[currentActivityIndex].logs;
 
     if (editingLogIndex >= 0) {
-        // 수정
+        // 수정 — 편집 시 알림 없음
         logs[editingLogIndex] = { date, hours, note };
     } else {
         // 신규
         logs.push({ date, hours, note });
+        checkCompletion(currentCategory);
     }
 
     save();
@@ -635,6 +636,39 @@ function deleteLog(category, goalIndex, actIndex, logIndex) {
         save();
         renderGoals(category);
         updateDisplay(category);
+    }
+}
+
+
+// ── 100% 달성 축하 알림 (신규 추가 시에만, 처음 달성 순간만) ──
+function checkCompletion(category) {
+    if (!selectedLevel) return;
+    let req        = REQUIREMENTS[selectedLevel];
+    let sectionKey = CAT_KEYS[category];
+    let total      = 0;
+
+    if (sectionKey === 'exp') {
+        expTrips.forEach(function(t) { total += (t.countableDays || 0); });
+        if (total === req.exp.days) {
+            setTimeout(function() {
+                alert('🎉 Congratulations! You completed Expedition & Exploration (' + req.exp.days + ' days)!');
+            }, 300);
+        }
+    } else {
+        goals[category].forEach(function(goal) {
+            goal.activityTypes.forEach(function(act) {
+                act.logs.forEach(function(log) { total += log.hours; });
+            });
+        });
+        let target     = req[sectionKey].hours;
+        let addedHours = parseFloat(document.getElementById('log-hours').value || 0);
+        let prevTotal  = total - addedHours;
+        // 이 log로 인해 처음 목표 달성할 때만 알림
+        if (total >= target && prevTotal < target) {
+            setTimeout(function() {
+                alert('🎉 Congratulations! You completed ' + category + ' (' + target + ' hrs)!');
+            }, 300);
+        }
     }
 }
 
