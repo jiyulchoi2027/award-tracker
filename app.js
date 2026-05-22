@@ -870,32 +870,177 @@ function updateBadges(level) {
 }
 
 // ════════════════════════════════════════════
-// CSV 내보내기
+// CSV 내보내기 (Submittable Activity Table Format)
 // ════════════════════════════════════════════
 
 function exportCSV() {
     function f(val) { return '"' + String(val).replace(/"/g,'""') + '"'; }
 
-    let csv = 'Section,Goal,Activity Type,Date,Hours,Note\n';
+    const userName   = localStorage.getItem('userName')   || 'Student';
+    const level      = localStorage.getItem('selectedLevel') || '';
+    const startDate  = localStorage.getItem('startDate')  || '';
+    const exportDate = new Date().toISOString().slice(0, 10);
+
+    // ── Section label map ──
+    const SECTION_LABELS = {
+        'Voluntary Public Service': 'Voluntary Public Service',
+        'Personal Development':     'Personal Development',
+        'Physical Fitness':         'Physical Fitness',
+        'Expedition':               'Expedition & Exploration'
+    };
+
+    let csv = '';
+
+    // ── Cover block ──
+    csv += f('Congressional Award Activity Log') + '\n';
+    csv += f('Name:') + ',' + f(userName) + '\n';
+    csv += f('Award Level:') + ',' + f(level) + '\n';
+    csv += f('Program Start Date:') + ',' + f(startDate) + '\n';
+    csv += f('Export Date:') + ',' + f(exportDate) + '\n';
+    csv += '\n';
+
+    // ── Per-section activity tables ──
     CATS.forEach(function(cat) {
+        const label = SECTION_LABELS[cat] || cat;
+        const req   = REQUIREMENTS[level] || {};
+
+        // Section header
+        csv += f('=== ' + label.toUpperCase() + ' ===') + '\n';
+
+        // Collect all logs for this section
+        let allLogs = [];
         goals[cat].forEach(function(goal) {
             goal.activityTypes.forEach(function(act) {
                 act.logs.forEach(function(log) {
-                    csv += f(cat)+','+f(goal.name)+','+f(act.name)+','+f(log.date)+','+f(log.hours)+','+f(log.note||'')+'\n';
+                    allLogs.push({
+                        date:          log.date,
+                        goal:          goal.name,
+                        validator:     goal.validator     || '',
+                        validatorEmail:goal.validatorEmail|| '',
+                        activityType:  act.name,
+                        hours:         parseFloat(log.hours) || 0,
+                        note:          log.note || ''
+                    });
                 });
             });
         });
+
+        // Sort by date
+        allLogs.sort(function(a, b) { return a.date.localeCompare(b.date); });
+
+        if (allLogs.length === 0) {
+            csv += f('No activities logged yet.') + '\n\n';
+            return;
+        }
+
+        // Column headers
+        csv += f('Date') + ',' +
+               f('Goal / Organization') + ',' +
+               f('Validator Name') + ',' +
+               f('Validator Email') + ',' +
+               f('Activity Type') + ',' +
+               f('Hours') + ',' +
+               f('Notes') + '\n';
+
+        // Rows
+        allLogs.forEach(function(row) {
+            csv += f(row.date) + ',' +
+                   f(row.goal) + ',' +
+                   f(row.validator) + ',' +
+                   f(row.validatorEmail) + ',' +
+                   f(row.activityType) + ',' +
+                   f(row.hours) + ',' +
+                   f(row.note) + '\n';
+        });
+
+        // Section summary
+        const totalHours = allLogs.reduce(function(s, r) { return s + r.hours; }, 0);
+
+        // Active months: count distinct YYYY-MM strings
+        const months = new Set(allLogs.map(function(r) { return r.date.slice(0, 7); }));
+        const activeMonths = months.size;
+
+        // Requirement line (hours only — expedition handled separately)
+        let reqHours  = (req[_catKey(cat)] && req[_catKey(cat)].hours)  || '—';
+        let reqMonths = (req[_catKey(cat)] && req[_catKey(cat)].months) || 0;
+
+        csv += '\n';
+        csv += f('Section Total') + ',' + f(totalHours.toFixed(1) + ' hrs') + '\n';
+        csv += f('Required') + ',' + f(reqHours + ' hrs') + '\n';
+        if (reqMonths > 0) {
+            csv += f('Active Months') + ',' + f(activeMonths + ' / ' + reqMonths + ' months') + '\n';
+        }
+        csv += f('Status') + ',' + f(totalHours >= reqHours ? '✓ COMPLETE' : 'IN PROGRESS') + '\n';
+        csv += '\n';
     });
 
-    let blob = new Blob([csv], { type:'text/csv' });
+    // ── Expedition section (separate format) ──
+    csv += f('=== EXPEDITION & EXPLORATION ===') + '\n';
+    const trips = JSON.parse(localStorage.getItem('trips') || '[]');
+    if (trips.length === 0) {
+        csv += f('No trips logged yet.') + '\n\n';
+    } else {
+        csv += f('Location') + ',' +
+               f('Start Date') + ',' +
+               f('End Date') + ',' +
+               f('Award Days') + ',' +
+               f('Nights') + ',' +
+               f('Validator Email') + '\n';
+        let totalDays = 0;
+        trips.forEach(function(t) {
+            csv += f(t.location || '') + ',' +
+                   f(t.startDate || '') + ',' +
+                   f(t.endDate   || '') + ',' +
+                   f(t.awardDays || 0) + ',' +
+                   f(t.nights    || 0) + ',' +
+                   f(t.validator || '') + '\n';
+            totalDays += parseInt(t.awardDays) || 0;
+        });
+        const expReq = (REQUIREMENTS[level] && REQUIREMENTS[level].exp) || {};
+        csv += '\n';
+        csv += f('Total Award Days') + ',' + f(totalDays) + '\n';
+        csv += f('Required Days')    + ',' + f(expReq.days || '—') + '\n';
+        csv += f('Status') + ',' + f(totalDays >= (expReq.days || 999) ? '✓ COMPLETE' : 'IN PROGRESS') + '\n';
+        csv += '\n';
+    }
+
+    // ── Overall summary ──
+    csv += f('=== OVERALL SUMMARY ===') + '\n';
+    csv += f('Section') + ',' + f('Hours Logged') + ',' + f('Required') + ',' + f('Status') + '\n';
+    CATS.forEach(function(cat) {
+        const req = REQUIREMENTS[level] || {};
+        let totalHours = 0;
+        goals[cat].forEach(function(goal) {
+            goal.activityTypes.forEach(function(act) {
+                act.logs.forEach(function(log) { totalHours += parseFloat(log.hours) || 0; });
+            });
+        });
+        const reqHours = (req[_catKey(cat)] && req[_catKey(cat)].hours) || '—';
+        const done = typeof reqHours === 'number' ? (totalHours >= reqHours ? '✓ COMPLETE' : 'IN PROGRESS') : '—';
+        csv += f(cat) + ',' + f(totalHours.toFixed(1)) + ',' + f(reqHours) + ',' + f(done) + '\n';
+    });
+
+    // ── Download ──
+    let blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     let url  = URL.createObjectURL(blob);
     let a    = document.createElement('a');
     a.href   = url;
-    a.download = 'congressional-award-' + (localStorage.getItem('userName') || 'export') + '.csv';
+    a.download = 'congressional-award-' + userName.replace(/\s+/g, '-') + '-' + exportDate + '.csv';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+}
+
+// category key → REQUIREMENTS key 매핑 헬퍼
+function _catKey(cat) {
+    const map = {
+        'Voluntary Public Service': 'vps',
+        'Personal Development':     'pd',
+        'Physical Fitness':         'pf',
+        'Expedition':               'exp'
+    };
+    return map[cat] || cat;
 }
 
 // ════════════════════════════════════════════
