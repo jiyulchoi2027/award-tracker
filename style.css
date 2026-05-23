@@ -1072,26 +1072,135 @@ header p {
     font-size: 13px;
 }
 
-/* ── Section button row (Add Goal + Export) ── */
-.section-btn-row {
+/* ══════════════════════════════════════════
+   Splash Screen
+   ══════════════════════════════════════════ */
+#splash-screen {
+    position: fixed;
+    inset: 0;
+    background: #1A3A6B;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 0.6s ease;
+}
+
+#splash-screen.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#splash-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+}
+
+#compass-svg {
+    width: 200px;
+    height: 200px;
+    opacity: 0;
+    transform: scale(0.85);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+#compass-svg.show {
+    opacity: 1;
+    transform: scale(1);
+}
+
+#compass-needle {
+    transform-origin: 130px 130px;
+    transform-box: fill-box;
+}
+
+@keyframes needleSettle {
+    0%   { transform: rotate(-35deg); }
+    30%  { transform: rotate(18deg); }
+    55%  { transform: rotate(-10deg); }
+    75%  { transform: rotate(5deg); }
+    90%  { transform: rotate(-2deg); }
+    100% { transform: rotate(0deg); }
+}
+
+#compass-needle.animate {
+    animation: needleSettle 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+#splash-title {
+    font-family: Georgia, serif;
+    font-size: 38px;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: 2px;
+    margin-top: 24px;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+#splash-title.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#splash-sub {
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color: #7AAAD4;
+    letter-spacing: 4px;
+    margin-top: 8px;
+    opacity: 0;
+    transition: opacity 0.5s ease 0.15s;
+}
+
+#splash-sub.show { opacity: 1; }
+
+#splash-divider {
+    width: 80px;
+    height: 1px;
+    background: #F0A500;
+    opacity: 0;
+    margin-top: 16px;
+    transition: opacity 0.4s ease 0.2s, width 0.5s ease 0.2s;
+}
+
+#splash-divider.show {
+    opacity: 0.6;
+    width: 120px;
+}
+
+#splash-credit {
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    color: #4A7AAF;
+    margin-top: 10px;
+    opacity: 0;
+    transition: opacity 0.5s ease 0.25s;
+}
+
+#splash-credit.show { opacity: 1; }
+
+#splash-dots {
     display: flex;
     gap: 10px;
-    align-items: center;
-    margin-top: 4px;
+    margin-top: 36px;
+    opacity: 0;
+    transition: opacity 0.4s ease;
 }
 
-.export-btn {
-    background: #1a3a6b;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 18px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
+#splash-dots.show { opacity: 1; }
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #F0A500;
+    opacity: 0.2;
+    transition: opacity 0.3s ease;
 }
 
-.export-btn:hover {
-    background: #f0a500;
-}
+.dot.active { opacity: 1; }

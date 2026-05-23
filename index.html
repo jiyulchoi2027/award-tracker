@@ -8,6 +8,52 @@
 </head>
 <body>
 
+<!-- ── Splash Screen ── -->
+<div id="splash-screen">
+    <div id="splash-content">
+        <svg id="compass-svg" viewBox="0 0 260 260" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="130" cy="130" r="118" fill="none" stroke="#F0A500" stroke-width="2.5" opacity="0.35"/>
+            <circle cx="130" cy="130" r="124" fill="none" stroke="#F0A500" stroke-width="0.8" opacity="0.15"/>
+            <circle cx="130" cy="130" r="110" fill="#0F2550"/>
+            <circle cx="130" cy="130" r="110" fill="none" stroke="#F0A500" stroke-width="2.5"/>
+            <g stroke="#F0A500" stroke-width="1" opacity="0.45">
+                <line x1="130" y1="22" x2="130" y2="36"/>
+                <line x1="130" y1="224" x2="130" y2="238"/>
+                <line x1="22"  y1="130" x2="36"  y2="130"/>
+                <line x1="224" y1="130" x2="238" y2="130"/>
+                <line x1="89"  y1="33"  x2="93"  y2="46"/>
+                <line x1="171" y1="33"  x2="167" y2="46"/>
+                <line x1="89"  y1="227" x2="93"  y2="214"/>
+                <line x1="171" y1="227" x2="167" y2="214"/>
+                <line x1="33"  y1="89"  x2="46"  y2="93"/>
+                <line x1="33"  y1="171" x2="46"  y2="167"/>
+                <line x1="227" y1="89"  x2="214" y2="93"/>
+                <line x1="227" y1="171" x2="214" y2="167"/>
+            </g>
+            <text x="130" y="54"  text-anchor="middle" font-family="Georgia,serif" font-size="18" font-weight="700" fill="#F0A500">N</text>
+            <text x="130" y="218" text-anchor="middle" font-family="Georgia,serif" font-size="15" font-weight="600" fill="#4A7AAF">S</text>
+            <text x="234" y="135" text-anchor="middle" font-family="Georgia,serif" font-size="15" font-weight="600" fill="#4A7AAF">E</text>
+            <text x="26"  y="135" text-anchor="middle" font-family="Georgia,serif" font-size="15" font-weight="600" fill="#4A7AAF">W</text>
+            <g id="compass-needle">
+                <polygon points="130,58  124,130 130,115 136,130" fill="#F0A500"/>
+                <polygon points="130,202 124,130 130,145 136,130" fill="#2E5C96"/>
+            </g>
+            <circle cx="130" cy="130" r="9"  fill="#0F2550" stroke="#F0A500" stroke-width="2.2"/>
+            <circle cx="130" cy="130" r="4"  fill="#F0A500"/>
+        </svg>
+
+        <div id="splash-title">Award Compass</div>
+        <div id="splash-sub">CONGRESSIONAL AWARD TRACKER</div>
+        <div id="splash-divider"></div>
+        <div id="splash-credit">Built by Kyle (Jiyul) Choi &nbsp;·&nbsp; Mill Creek High School &nbsp;·&nbsp; Class of 2026</div>
+        <div id="splash-dots">
+            <span class="dot" id="dot1"></span>
+            <span class="dot" id="dot2"></span>
+            <span class="dot" id="dot3"></span>
+        </div>
+    </div>
+</div>
+
 <!-- ── Setup Screen ── -->
 <div id="setup-screen">
     <h1>Congressional Award Tracker</h1>
@@ -43,7 +89,6 @@
         <p>Built by Kyle (Jiyul) Choi — Mill Creek High School, Class of 2026</p>
         <div class="header-btns">
             <button class="add-btn" onclick="exportCSV()">📤 Export CSV</button>
-
             <button class="reset-btn" onclick="openSettingsModal()">⚙️ Settings</button>
         </div>
     </header>
@@ -82,10 +127,7 @@
                 <p class="progress-text" id="vps-text">0 / 200 hours completed (Silver Medal)</p>
                 <p class="progress-text" id="vps-months">Active months: 0 / 12 months</p>
                 <div id="vps-goals"></div>
-                <div class="section-btn-row">
-                    <button class="add-btn" onclick="openGoalModal('Voluntary Public Service')">+ Add Goal</button>
-                    <button class="export-btn" onclick="exportXLSX('Voluntary Public Service')">📤 Export</button>
-                </div>
+                <button class="add-btn" onclick="openGoalModal('Voluntary Public Service')">+ Add Goal</button>
             </div>
         </div>
 
@@ -101,10 +143,7 @@
                 <p class="progress-text" id="pd-text">0 / 100 hours completed (Silver Medal)</p>
                 <p class="progress-text" id="pd-months">Active months: 0 / 12 months</p>
                 <div id="pd-goals"></div>
-                <div class="section-btn-row">
-                    <button class="add-btn" onclick="openGoalModal('Personal Development')">+ Add Goal</button>
-                    <button class="export-btn" onclick="exportXLSX('Personal Development')">📤 Export</button>
-                </div>
+                <button class="add-btn" onclick="openGoalModal('Personal Development')">+ Add Goal</button>
             </div>
         </div>
 
@@ -120,10 +159,7 @@
                 <p class="progress-text" id="pf-text">0 / 100 hours completed (Silver Medal)</p>
                 <p class="progress-text" id="pf-months">Active months: 0 / 12 months</p>
                 <div id="pf-goals"></div>
-                <div class="section-btn-row">
-                    <button class="add-btn" onclick="openGoalModal('Physical Fitness')">+ Add Goal</button>
-                    <button class="export-btn" onclick="exportXLSX('Physical Fitness')">📤 Export</button>
-                </div>
+                <button class="add-btn" onclick="openGoalModal('Physical Fitness')">+ Add Goal</button>
             </div>
         </div>
 
@@ -138,10 +174,7 @@
                 </div>
                 <p class="progress-text" id="exp-text">0 / 3 days — Silver Medal</p>
                 <div id="exp-trips-list"></div>
-                <div class="section-btn-row">
-                    <button class="add-btn" onclick="openTripModal()">+ Add Trip</button>
-                    <button class="export-btn" onclick="exportXLSX('Expedition')">📤 Export</button>
-                </div>
+                <button class="add-btn" onclick="openTripModal()">+ Add Trip</button>
             </div>
         </div>
 
@@ -268,7 +301,6 @@
         </div>
     </div>
 
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <script src="app.js"></script>
 </div>
 </body>

@@ -870,170 +870,32 @@ function updateBadges(level) {
 }
 
 // ════════════════════════════════════════════
-// XLSX 내보내기 (Submittable Activity Table)
+// CSV 내보내기
 // ════════════════════════════════════════════
 
-// category → REQUIREMENTS key
-function _catKey(cat) {
-    var map = {
-        'Voluntary Public Service': 'vps',
-        'Personal Development':     'pd',
-        'Physical Fitness':         'pf',
-        'Expedition':               'exp'
-    };
-    return map[cat] || cat;
-}
+function exportCSV() {
+    function f(val) { return '"' + String(val).replace(/"/g,'""') + '"'; }
 
-// 셀 스타일 헬퍼
-function _cs(bold, bgRGB, border, align) {
-    var s = { font: {} };
-    if (bold) s.font.bold = true;
-    if (bgRGB) s.fill = { patternType: 'solid', fgColor: { rgb: bgRGB } };
-    if (border) {
-        var b = { style: 'thin', color: { rgb: '888888' } };
-        s.border = { top: b, bottom: b, left: b, right: b };
-    }
-    if (align) s.alignment = { horizontal: align, vertical: 'center', wrapText: true };
-    return s;
-}
-
-function _r(r, c) { return XLSX.utils.encode_cell({r: r, c: c}); }
-
-function _applyCell(ws, r, c, style) {
-    var addr = _r(r, c);
-    if (!ws[addr]) ws[addr] = { v: '', t: 's' };
-    ws[addr].s = style;
-}
-
-function exportCSV() { /* legacy stub — not used */ }
-
-function exportXLSX(cat) {
-    if (typeof XLSX === 'undefined') {
-        alert('SheetJS library not loaded. Please check your internet connection.');
-        return;
-    }
-
-    var userName  = localStorage.getItem('userName')      || 'Student';
-    var level     = localStorage.getItem('selectedLevel') || '';
-    var startDate = localStorage.getItem('startDate')     || '';
-    var today     = new Date().toISOString().slice(0, 10);
-    var req       = REQUIREMENTS[level] || {};
-    var key       = _catKey(cat);
-
-    var LABELS = {
-        'Voluntary Public Service': 'Voluntary Public Service',
-        'Personal Development':     'Personal Development',
-        'Physical Fitness':         'Physical Fitness',
-        'Expedition':               'Expedition & Exploration'
-    };
-    var label = LABELS[cat] || cat;
-
-    // ── 색상 팔레트 ──
-    var C_NAVY  = '1A3A6B';
-    var C_GOLD  = 'F0A500';
-    var C_LBLU  = 'D6E4F0';
-    var C_LGRY  = 'F5F5F5';
-    var C_YGLD  = 'FFF3CD';
-    var C_WHITE = 'FFFFFF';
-
-    // ── 로그 수집 ──
-    var allLogs = [];
-    if (cat !== 'Expedition') {
+    let csv = 'Section,Goal,Activity Type,Date,Hours,Note\n';
+    CATS.forEach(function(cat) {
         goals[cat].forEach(function(goal) {
             goal.activityTypes.forEach(function(act) {
                 act.logs.forEach(function(log) {
-                    allLogs.push({
-                        date:           log.date,
-                        goal:           goal.name,
-                        validator:      goal.validator      || '',
-                        validatorEmail: goal.validatorEmail || '',
-                        activityType:   act.name,
-                        hours:          parseFloat(log.hours) || 0,
-                        note:           log.note || ''
-                    });
+                    csv += f(cat)+','+f(goal.name)+','+f(act.name)+','+f(log.date)+','+f(log.hours)+','+f(log.note||'')+'\n';
                 });
             });
         });
-        allLogs.sort(function(a, b) { return a.date.localeCompare(b.date); });
-    }
+    });
 
-    // ══════════════════════════════
-    // SHEET 2 : Activity Log
-    // ══════════════════════════════
-    var ws2Data = [];
-    var s2Cols  = cat === 'Expedition' ? 7 : 8;
-
-    function pad2(row) { while(row.length < s2Cols) row.push(''); return row; }
-
-    ws2Data.push(pad2([label + ' — Detailed Activity Log']));
-    ws2Data.push(pad2(['Name: ' + userName + '   |   Level: ' + level + '   |   Export Date: ' + today]));
-    ws2Data.push(pad2([]));
-
-    if (cat === 'Expedition') {
-        var trips2 = JSON.parse(localStorage.getItem('trips') || '[]');
-        ws2Data.push(['#','Location','Start Date','End Date','Award Days','Nights','Validator Email']);
-        trips2.forEach(function(t,i){
-            ws2Data.push([i+1, t.location||'', t.startDate||'', t.endDate||'',
-                          parseInt(t.awardDays)||0, parseInt(t.nights)||0, t.validator||'']);
-        });
-    } else {
-        ws2Data.push(['#','Date','Goal / Organization','Validator Name','Validator Email','Activity Type','Hours','Notes']);
-        allLogs.forEach(function(row,i){
-            ws2Data.push([i+1, row.date, row.goal, row.validator, row.validatorEmail,
-                          row.activityType, row.hours, row.note]);
-        });
-        ws2Data.push(pad2([]));
-        var tot2 = allLogs.reduce(function(s,l){return s+l.hours;},0);
-        ws2Data.push(['','TOTAL HOURS','','','','',tot2.toFixed(1),'']);
-    }
-
-    var ws2 = XLSX.utils.aoa_to_sheet(ws2Data);
-    if (!ws2['!merges']) ws2['!merges'] = [];
-
-    // Sheet2 서식
-    ws2['!merges'].push({s:{r:0,c:0}, e:{r:0,c:s2Cols-1}});
-    var t2 = ws2[_r(0,0)]; if(t2){ t2.s = _cs(true,C_NAVY,false,'center'); t2.s.font.color={rgb:'FFFFFF'}; }
-    ws2['!merges'].push({s:{r:1,c:0}, e:{r:1,c:s2Cols-1}});
-    _applyCell(ws2,1,0,_cs(false,C_LBLU,true,'left'));
-
-    // 컬럼 헤더 (row 3)
-    for(var sc=0;sc<s2Cols;sc++) _applyCell(ws2,3,sc,_cs(true,C_GOLD,true,'center'));
-
-    // 데이터 행 교대색
-    var dLen = cat==='Expedition'
-        ? JSON.parse(localStorage.getItem('trips')||'[]').length
-        : allLogs.length;
-    for(var dr=0;dr<dLen;dr++){
-        var dBg = dr%2===0 ? C_WHITE : C_LGRY;
-        for(var dc=0;dc<s2Cols;dc++){
-            _applyCell(ws2,4+dr,dc,_cs(false,dBg,true,dc===0?'center':'left'));
-        }
-    }
-
-    // TOTAL 행 (Sheet2 마지막)
-    if(cat !== 'Expedition'){
-        var totR2 = 4 + dLen + 1;
-        for(var tc2=0;tc2<s2Cols;tc2++){
-            _applyCell(ws2,totR2,tc2,_cs(tc2===1||tc2===6,C_LBLU,true,'left'));
-        }
-    }
-
-    // Sheet2 컬럼 너비
-    if(cat==='Expedition'){
-        ws2['!cols']=[{wch:4},{wch:22},{wch:12},{wch:12},{wch:12},{wch:8},{wch:24}];
-    } else {
-        ws2['!cols']=[{wch:4},{wch:12},{wch:22},{wch:18},{wch:24},{wch:20},{wch:8},{wch:28}];
-    }
-    ws2['!rows'] = [{hpt:24},{hpt:18}];
-
-    // ── Workbook 생성 & 다운로드 ──
-    var wb    = XLSX.utils.book_new();
-    var sName = label.replace(/[&\/\s]+/g,'-').slice(0,25);
-    XLSX.utils.book_append_sheet(wb, ws2, sName);
-
-    var fileName = 'CongAward-' + cat.replace(/[\s&\/]+/g,'-') +
-                   '-' + userName.replace(/\s+/g,'-') + '-' + today + '.xlsx';
-    XLSX.writeFile(wb, fileName);
+    let blob = new Blob([csv], { type:'text/csv' });
+    let url  = URL.createObjectURL(blob);
+    let a    = document.createElement('a');
+    a.href   = url;
+    a.download = 'congressional-award-' + (localStorage.getItem('userName') || 'export') + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }
 
 // ════════════════════════════════════════════
@@ -1146,3 +1008,59 @@ window.onload = function() {
         showTab(lastTab);
     }
 };
+// ════════════════════════════════════════════
+// Splash Screen
+// ════════════════════════════════════════════
+(function() {
+    var splash = document.getElementById('splash-screen');
+    if (!splash) return;
+
+    // 0.1s: 나침반 fade in
+    setTimeout(function() {
+        document.getElementById('compass-svg').classList.add('show');
+    }, 100);
+
+    // 0.5s: 바늘 애니메이션
+    setTimeout(function() {
+        document.getElementById('compass-needle').classList.add('animate');
+    }, 500);
+
+    // 1.4s: 타이틀 등장
+    setTimeout(function() {
+        document.getElementById('splash-title').classList.add('show');
+    }, 1400);
+
+    // 1.7s: 서브타이틀 + 구분선 + 크레딧
+    setTimeout(function() {
+        document.getElementById('splash-sub').classList.add('show');
+        document.getElementById('splash-divider').classList.add('show');
+        document.getElementById('splash-credit').classList.add('show');
+    }, 1700);
+
+    // 2.0s: 로딩 dots 순차 점등
+    setTimeout(function() {
+        document.getElementById('splash-dots').classList.add('show');
+    }, 2000);
+
+    setTimeout(function() {
+        document.getElementById('dot1').classList.add('active');
+    }, 2100);
+
+    setTimeout(function() {
+        document.getElementById('dot2').classList.add('active');
+    }, 2350);
+
+    setTimeout(function() {
+        document.getElementById('dot3').classList.add('active');
+    }, 2600);
+
+    // 3.2s: fade out
+    setTimeout(function() {
+        splash.classList.add('fade-out');
+    }, 3200);
+
+    // 3.8s: 완전 제거
+    setTimeout(function() {
+        splash.style.display = 'none';
+    }, 3800);
+})();
