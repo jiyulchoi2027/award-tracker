@@ -183,11 +183,11 @@ function saveTrip() {
     let existingDayLogs = (editingTripIdx >= 0 && expTrips[editingTripIdx])
         ? expTrips[editingTripIdx].dayLogs : [];
 
-    // dayLogs 생성 (첫날/마지막날 travel days면 isTravel=true)
+    // dayLogs 생성 — new Date('YYYY-MM-DD')는 UTC 파싱으로 미국 타임존에서 하루 빠지는 버그 수정
     let dayLogs = [];
+    let sParts = startDate.split('-');
     for (let i = 0; i < totalDays; i++) {
-        let d = new Date(startDate);
-        d.setDate(d.getDate() + i);
+        let d = new Date(parseInt(sParts[0]), parseInt(sParts[1])-1, parseInt(sParts[2]) + i);
         let dateStr  = d.getFullYear() + '-'
             + String(d.getMonth()+1).padStart(2,'0') + '-'
             + String(d.getDate()).padStart(2,'0');

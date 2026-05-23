@@ -85,8 +85,7 @@
 
     <header>
         <h1>Congressional Award Tracker</h1>
-        <p id="header-name"></p>
-        <p>Built by Kyle (Jiyul) Choi — Mill Creek High School, Class of 2026</p>
+        <p id="header-name" style="font-size:20px; font-weight:700; margin:4px 0;"></p>
         <div class="header-btns">
             <button class="add-btn" onclick="exportCSV()">📤 Export CSV</button>
             <button class="guide-btn" onclick="openGuide()">📖 Guide</button>
@@ -268,6 +267,27 @@
             <div class="modal-buttons">
                 <button class="save-btn" onclick="saveTrip()">Save Trip</button>
                 <button class="cancel-btn" onclick="closeTripModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Expedition Activity 모달 ── -->
+    <div id="act-modal" class="modal-overlay" style="display:none">
+        <div class="modal">
+            <h3 id="act-modal-title">Add Activity</h3>
+            <label>Start Time</label>
+            <input type="time" id="act-start-time" class="input-field" onchange="calcActivityHours()">
+            <label>End Time</label>
+            <input type="time" id="act-end-time" class="input-field" onchange="calcActivityHours()">
+            <p class="modal-hint" id="act-hours-calc" style="display:none; color:#1a3a6b; font-weight:bold;"></p>
+            <label>Description</label>
+            <input type="text" id="act-description" class="input-field" placeholder="e.g. Hiking to the summit">
+            <label>Photo <span style="font-weight:normal;color:#aaa;">(optional)</span></label>
+            <input type="file" id="act-photo-input" class="input-field" accept="image/*" onchange="previewActPhoto()">
+            <img id="act-photo-preview" style="display:none; max-width:100%; border-radius:8px; margin-top:6px;">
+            <div class="modal-buttons">
+                <button class="save-btn" onclick="saveActivity()">Save</button>
+                <button class="cancel-btn" onclick="closeActivityModal()">Cancel</button>
             </div>
         </div>
     </div>
