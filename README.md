@@ -53,8 +53,10 @@ before graduation.
 Development Log
 VersionDateUpdatev0.1April 2026First HTML structurev0.2April 2026CSS design and card layoutv0.3May 2026Activity input and photo uploadv0.4May 2026Save data with localStoragev0.5May 2026All 6 award level requirementsv0.6May 2026Setup screen with level selectionv0.7May 2026CSV export featurev0.8May 2026Month requirements per levelv0.9May 2026Auto update badges by levelv0.10May 2026Goal modal with validator inputv0.11May 2026Display saved goals in cardsv0.12May 2026Goal count limit per sectionv0.13May 2026Goal delete functionv0.14May 2026Mobile responsive designv1.0May 20263-level structure (Goal → Activity Type → Log), settings modal, edit/delete all levelsv1.1May 2026Tab navigation, Expedition day-by-day log with photo, travel days handling, program start date, completion alert
 
-About the Developer
+☞ About the Developer
+
 Jiyul Choi (Kyle)
 Mill Creek High School, Class of 2026
+
 Hoschton, Georgia
 Congressional Award Silver Medal Candidat
