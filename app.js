@@ -1,3 +1,14 @@
+// ─── XSS 방지 HTML 이스케이프 함수 ───
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 // ─── Congressional Award 전체 레벨 요건 ───
 const REQUIREMENTS = {
     'Bronze Certificate': {
@@ -183,11 +194,11 @@ function saveTrip() {
     let existingDayLogs = (editingTripIdx >= 0 && expTrips[editingTripIdx])
         ? expTrips[editingTripIdx].dayLogs : [];
 
-    // dayLogs 생성 — new Date('YYYY-MM-DD')는 UTC 파싱으로 미국 타임존에서 하루 빠지는 버그 수정
+    // dayLogs 생성 (첫날/마지막날 travel days면 isTravel=true)
     let dayLogs = [];
-    let sParts = startDate.split('-');
     for (let i = 0; i < totalDays; i++) {
-        let d = new Date(parseInt(sParts[0]), parseInt(sParts[1])-1, parseInt(sParts[2]) + i);
+        let d = new Date(startDate);
+        d.setDate(d.getDate() + i);
         let dateStr  = d.getFullYear() + '-'
             + String(d.getMonth()+1).padStart(2,'0') + '-'
             + String(d.getDate()).padStart(2,'0');
@@ -404,15 +415,15 @@ function renderExpedition() {
         div.innerHTML = `
             <div class="trip-header">
                 <div class="trip-header-left">
-                    <p class="trip-location">📍 ${trip.location}</p>
-                    <p class="trip-dates">${trip.startDate} → ${trip.endDate}</p>
+                    <p class="trip-location">📍 ${escapeHtml(trip.location)}</p>
+                    <p class="trip-dates">${escapeHtml(trip.startDate)} → ${escapeHtml(trip.endDate)}</p>
                     <p class="trip-stats">
                         ${trip.totalDays} total days
                         / <strong>${trip.countableDays} countable</strong>
                         / ${trip.nights} nights
                         ${trip.travelDays > 0 ? ' ('+trip.travelDays+' travel days excluded)' : ''}
                     </p>
-                    ${trip.validatorEmail ? '<p class="trip-validator">✉️ '+trip.validatorEmail+'</p>' : ''}
+                    ${trip.validatorEmail ? '<p class="trip-validator">✉️ '+escapeHtml(trip.validatorEmail)+'</p>' : ''}
                 </div>
                 <div class="trip-header-right">
                     <button class="icon-btn edit-btn" onclick="openTripModal(${tIdx})">✏️</button>
@@ -661,9 +672,9 @@ function checkCompletion(category) {
             });
         });
         let target     = req[sectionKey].hours;
-        let addedHours = parseFloat(document.getElementById('log-hours').value || 0);
+        let addedHours = parseFloat(document.getElementById('log-hours') ? document.getElementById('log-hours').value || 0 : 0);
         let prevTotal  = total - addedHours;
-        // 이 log로 인해 처음 목표 달성할 때만 알림
+        // 이 log로 인해 처음 목표 달성할 때만 알림 (prevTotal이 0인 첫 로그도 포함)
         if (total >= target && prevTotal < target) {
             setTimeout(function() {
                 alert('🎉 Congratulations! You completed ' + category + ' (' + target + ' hrs)!');
@@ -781,12 +792,12 @@ function renderGoals(category) {
             act.logs.forEach(function(log, lIdx) {
                 logsHtml += `
                     <div class="log-item">
-                        <span class="log-date">${log.date}</span>
-                        <span class="log-hours">${log.hours} hrs</span>
-                        <span class="log-note">${log.note || ''}</span>
+                        <span class="log-date">${escapeHtml(log.date)}</span>
+                        <span class="log-hours">${escapeHtml(log.hours)} hrs</span>
+                        <span class="log-note">${escapeHtml(log.note || '')}</span>
                         <div class="log-actions">
-                            <button class="log-edit-btn" onclick="openLogModal('${category}',${gIdx},${aIdx},${lIdx})">✏️</button>
-                            <button class="log-del-btn"  onclick="deleteLog('${category}',${gIdx},${aIdx},${lIdx})">🗑️</button>
+                            <button class="log-edit-btn" onclick="openLogModal('${escapeHtml(category)}',${gIdx},${aIdx},${lIdx})">✏️</button>
+                            <button class="log-del-btn"  onclick="deleteLog('${escapeHtml(category)}',${gIdx},${aIdx},${lIdx})">🗑️</button>
                         </div>
                     </div>`;
             });
@@ -794,16 +805,16 @@ function renderGoals(category) {
             actTypesHtml += `
                 <div class="act-type-card">
                     <div class="act-type-header">
-                        <span class="act-type-name">📁 ${act.name}</span>
+                        <span class="act-type-name">📁 ${escapeHtml(act.name)}</span>
                         <span class="act-type-summary">${actHours} hrs / ${actSessions} sessions</span>
                         <div class="act-type-btns">
-                            <button class="log-btn"    onclick="openLogModal('${category}',${gIdx},${aIdx})">+ Log</button>
-                            <button class="toggle-btn" onclick="toggleLogs('logs-${category}-${gIdx}-${aIdx}')">▼ View</button>
-                            <button class="edit-btn"   onclick="openActivityTypeModal('${category}',${gIdx},${aIdx})">✏️</button>
-                            <button class="delete-btn" onclick="deleteActivityType('${category}',${gIdx},${aIdx})">🗑️</button>
+                            <button class="log-btn"    onclick="openLogModal('${escapeHtml(category)}',${gIdx},${aIdx})">+ Log</button>
+                            <button class="toggle-btn" onclick="toggleLogs('logs-${escapeHtml(category)}-${gIdx}-${aIdx}')">▼ View</button>
+                            <button class="edit-btn"   onclick="openActivityTypeModal('${escapeHtml(category)}',${gIdx},${aIdx})">✏️</button>
+                            <button class="delete-btn" onclick="deleteActivityType('${escapeHtml(category)}',${gIdx},${aIdx})">🗑️</button>
                         </div>
                     </div>
-                    <div class="logs-container" id="logs-${category}-${gIdx}-${aIdx}" style="display:none">
+                    <div class="logs-container" id="logs-${escapeHtml(category)}-${gIdx}-${aIdx}" style="display:none">
                         ${logsHtml || '<p class="no-logs">No logs yet. Click "+ Log" to add.</p>'}
                     </div>
                 </div>`;
@@ -814,18 +825,18 @@ function renderGoals(category) {
         div.innerHTML = `
             <div class="goal-header">
                 <div class="goal-header-left">
-                    <p class="goal-title">📌 ${goal.name}</p>
-                    <p class="goal-meta">Validator: ${goal.validator || 'Not set'}&nbsp;|&nbsp;${goal.email || '—'}</p>
+                    <p class="goal-title">📌 ${escapeHtml(goal.name)}</p>
+                    <p class="goal-meta">Validator: ${escapeHtml(goal.validator || 'Not set')}&nbsp;|&nbsp;${escapeHtml(goal.email || '—')}</p>
                 </div>
                 <div class="goal-header-right">
                     <span class="goal-total">${goalHours} hrs<br><small>${goalSessions} sessions</small></span>
-                    <button class="icon-btn edit-btn" onclick="openGoalModal('${category}',${gIdx})">✏️</button>
-                    <button class="icon-btn delete-btn" onclick="deleteGoal('${category}',${gIdx})">🗑️</button>
+                    <button class="icon-btn edit-btn" onclick="openGoalModal('${escapeHtml(category)}',${gIdx})">✏️</button>
+                    <button class="icon-btn delete-btn" onclick="deleteGoal('${escapeHtml(category)}',${gIdx})">🗑️</button>
                 </div>
             </div>
             ${actTypesHtml}
             <div class="goal-footer">
-                <button class="add-btn" onclick="openActivityTypeModal('${category}',${gIdx})">+ Add Activity Type</button>
+                <button class="add-btn" onclick="openActivityTypeModal('${escapeHtml(category)}',${gIdx})">+ Add Activity Type</button>
             </div>`;
         container.appendChild(div);
     });

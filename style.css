@@ -1318,3 +1318,109 @@ header p {
 .g-tip-text { font-size: 11px; color: #334; line-height: 1.5; }
 
 .g-footer { text-align: center; font-size: 10px; color: #7AAAD4; padding-top: 12px; border-top: 1px solid #E0E8F0; }
+
+/* ══════════════════════════════════════════
+   Guide Overlay — Mobile Responsive
+   ══════════════════════════════════════════ */
+@media (max-width: 600px) {
+
+    /* 오버레이 패딩 줄이기 */
+    #guide-overlay {
+        padding: 0;
+        align-items: flex-end;
+    }
+
+    /* 바텀시트 스타일로 */
+    #guide-inner {
+        border-radius: 20px 20px 0 0;
+        max-height: 92vh;
+        overflow-y: auto;
+        animation: guideSlideUpMobile 0.3s ease;
+    }
+
+    @keyframes guideSlideUpMobile {
+        from { transform: translateY(100%); }
+        to   { transform: translateY(0); }
+    }
+
+    /* Close 버튼 — 상단 고정 */
+    #guide-close {
+        position: fixed;
+        top: auto;
+        bottom: calc(92vh - 20px);
+        right: 16px;
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+
+    #guide-body { padding: 16px 16px 24px; }
+
+    /* 헤더 — 세로 정렬 */
+    .g-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 16px;
+    }
+    .g-compass { font-size: 36px; }
+    .g-header-text h1 { font-size: 22px; }
+    .g-header-text p  { font-size: 10px; letter-spacing: 2px; }
+
+    /* 4 Activity Areas — 2x2 그리드 */
+    .g-four-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    .g-area-card { padding: 14px 10px; }
+    .g-area-icon { font-size: 28px; }
+    .g-area-name { font-size: 13px; }
+
+    /* How to Log — 세로 스택 */
+    .g-flow-row {
+        flex-direction: column;
+        gap: 6px;
+    }
+    .g-flow-step {
+        width: 100%;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-align: left;
+    }
+    .g-num {
+        margin: 0;
+        flex-shrink: 0;
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+    }
+    .g-ftitle { font-size: 14px; margin-bottom: 2px; }
+    .g-fdesc  { font-size: 12px; }
+    .g-arrow  {
+        transform: rotate(90deg);
+        font-size: 16px;
+        padding: 0;
+        align-self: center;
+    }
+
+    /* Export tip */
+    .g-export-tip { font-size: 12px; padding: 10px 12px; }
+
+    /* Requirements 테이블 — 스크롤 가능하게 */
+    .g-req-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-bottom: 22px;
+    }
+    .g-req-table {
+        min-width: 420px;
+        margin-bottom: 0;
+        font-size: 12px;
+    }
+    .g-req-table th, .g-req-table td { padding: 8px 8px; }
+
+    /* Tips */
+    .g-tip-text { font-size: 13px; }
+    .g-section-title { font-size: 13px; }
+}
