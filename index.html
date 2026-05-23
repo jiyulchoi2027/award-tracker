@@ -8,6 +8,52 @@
 </head>
 <body>
 
+<!-- ── Splash Screen ── -->
+<div id="splash-screen">
+    <div id="splash-content">
+        <svg id="compass-svg" viewBox="0 0 260 260" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="130" cy="130" r="118" fill="none" stroke="#F0A500" stroke-width="2.5" opacity="0.35"/>
+            <circle cx="130" cy="130" r="124" fill="none" stroke="#F0A500" stroke-width="0.8" opacity="0.15"/>
+            <circle cx="130" cy="130" r="110" fill="#0F2550"/>
+            <circle cx="130" cy="130" r="110" fill="none" stroke="#F0A500" stroke-width="2.5"/>
+            <g stroke="#F0A500" stroke-width="1" opacity="0.45">
+                <line x1="130" y1="22" x2="130" y2="36"/>
+                <line x1="130" y1="224" x2="130" y2="238"/>
+                <line x1="22"  y1="130" x2="36"  y2="130"/>
+                <line x1="224" y1="130" x2="238" y2="130"/>
+                <line x1="89"  y1="33"  x2="93"  y2="46"/>
+                <line x1="171" y1="33"  x2="167" y2="46"/>
+                <line x1="89"  y1="227" x2="93"  y2="214"/>
+                <line x1="171" y1="227" x2="167" y2="214"/>
+                <line x1="33"  y1="89"  x2="46"  y2="93"/>
+                <line x1="33"  y1="171" x2="46"  y2="167"/>
+                <line x1="227" y1="89"  x2="214" y2="93"/>
+                <line x1="227" y1="171" x2="214" y2="167"/>
+            </g>
+            <text x="130" y="54"  text-anchor="middle" font-family="Georgia,serif" font-size="18" font-weight="700" fill="#F0A500">N</text>
+            <text x="130" y="218" text-anchor="middle" font-family="Georgia,serif" font-size="15" font-weight="600" fill="#4A7AAF">S</text>
+            <text x="234" y="135" text-anchor="middle" font-family="Georgia,serif" font-size="15" font-weight="600" fill="#4A7AAF">E</text>
+            <text x="26"  y="135" text-anchor="middle" font-family="Georgia,serif" font-size="15" font-weight="600" fill="#4A7AAF">W</text>
+            <g id="compass-needle">
+                <polygon points="130,58  124,130 130,115 136,130" fill="#F0A500"/>
+                <polygon points="130,202 124,130 130,145 136,130" fill="#2E5C96"/>
+            </g>
+            <circle cx="130" cy="130" r="9"  fill="#0F2550" stroke="#F0A500" stroke-width="2.2"/>
+            <circle cx="130" cy="130" r="4"  fill="#F0A500"/>
+        </svg>
+
+        <div id="splash-title">Award Compass</div>
+        <div id="splash-sub">CONGRESSIONAL AWARD TRACKER</div>
+        <div id="splash-divider"></div>
+        <div id="splash-credit">Built by Kyle (Jiyul) Choi &nbsp;·&nbsp; Mill Creek High School &nbsp;·&nbsp; Class of 2026</div>
+        <div id="splash-dots">
+            <span class="dot" id="dot1"></span>
+            <span class="dot" id="dot2"></span>
+            <span class="dot" id="dot3"></span>
+        </div>
+    </div>
+</div>
+
 <!-- ── Setup Screen ── -->
 <div id="setup-screen">
     <h1>Congressional Award Tracker</h1>
@@ -43,7 +89,7 @@
         <p>Built by Kyle (Jiyul) Choi — Mill Creek High School, Class of 2026</p>
         <div class="header-btns">
             <button class="add-btn" onclick="exportCSV()">📤 Export CSV</button>
-
+            <button class="guide-btn" onclick="openGuide()">📖 Guide</button>
             <button class="reset-btn" onclick="openSettingsModal()">⚙️ Settings</button>
         </div>
     </header>
@@ -82,10 +128,7 @@
                 <p class="progress-text" id="vps-text">0 / 200 hours completed (Silver Medal)</p>
                 <p class="progress-text" id="vps-months">Active months: 0 / 12 months</p>
                 <div id="vps-goals"></div>
-                <div class="section-btn-row">
-                    <button class="add-btn" onclick="openGoalModal('Voluntary Public Service')">+ Add Goal</button>
-                    <button class="export-btn" onclick="exportXLSX('Voluntary Public Service')">📤 Export</button>
-                </div>
+                <button class="add-btn" onclick="openGoalModal('Voluntary Public Service')">+ Add Goal</button>
             </div>
         </div>
 
@@ -101,10 +144,7 @@
                 <p class="progress-text" id="pd-text">0 / 100 hours completed (Silver Medal)</p>
                 <p class="progress-text" id="pd-months">Active months: 0 / 12 months</p>
                 <div id="pd-goals"></div>
-                <div class="section-btn-row">
-                    <button class="add-btn" onclick="openGoalModal('Personal Development')">+ Add Goal</button>
-                    <button class="export-btn" onclick="exportXLSX('Personal Development')">📤 Export</button>
-                </div>
+                <button class="add-btn" onclick="openGoalModal('Personal Development')">+ Add Goal</button>
             </div>
         </div>
 
@@ -120,10 +160,7 @@
                 <p class="progress-text" id="pf-text">0 / 100 hours completed (Silver Medal)</p>
                 <p class="progress-text" id="pf-months">Active months: 0 / 12 months</p>
                 <div id="pf-goals"></div>
-                <div class="section-btn-row">
-                    <button class="add-btn" onclick="openGoalModal('Physical Fitness')">+ Add Goal</button>
-                    <button class="export-btn" onclick="exportXLSX('Physical Fitness')">📤 Export</button>
-                </div>
+                <button class="add-btn" onclick="openGoalModal('Physical Fitness')">+ Add Goal</button>
             </div>
         </div>
 
@@ -138,10 +175,7 @@
                 </div>
                 <p class="progress-text" id="exp-text">0 / 3 days — Silver Medal</p>
                 <div id="exp-trips-list"></div>
-                <div class="section-btn-row">
-                    <button class="add-btn" onclick="openTripModal()">+ Add Trip</button>
-                    <button class="export-btn" onclick="exportXLSX('Expedition')">📤 Export</button>
-                </div>
+                <button class="add-btn" onclick="openTripModal()">+ Add Trip</button>
             </div>
         </div>
 
@@ -268,8 +302,77 @@
         </div>
     </div>
 
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <script src="app.js"></script>
+
+    <!-- ── Guide Overlay ── -->
+    <div id="guide-overlay" style="display:none">
+        <div id="guide-inner">
+            <button id="guide-close" onclick="closeGuide()">✕ Close</button>
+            <div id="guide-body">
+
+                <div class="g-header">
+                    <div class="g-compass">🧭</div>
+                    <div class="g-header-text">
+                        <h1>Award Compass</h1>
+                        <p>CONGRESSIONAL AWARD TRACKER</p>
+                        <small>Quick Start Guide &nbsp;·&nbsp; Built by Kyle (Jiyul) Choi · Mill Creek HS · Class of 2026</small>
+                    </div>
+                </div>
+
+                <div class="g-section-title">4 Activity Areas</div>
+                <div class="g-four-grid">
+                    <div class="g-area-card"><div class="g-area-icon">🤝</div><div class="g-area-name">Voluntary<br>Public Service</div></div>
+                    <div class="g-area-card"><div class="g-area-icon">📚</div><div class="g-area-name">Personal<br>Development</div></div>
+                    <div class="g-area-card"><div class="g-area-icon">💪</div><div class="g-area-name">Physical<br>Fitness</div></div>
+                    <div class="g-area-card"><div class="g-area-icon">🧭</div><div class="g-area-name">Expedition &amp;<br>Exploration</div></div>
+                </div>
+
+                <div class="g-section-title">How to Log Activities</div>
+                <div class="g-flow-row">
+                    <div class="g-flow-step"><div class="g-num">1</div><div class="g-ftitle">Add Goal</div><div class="g-fdesc">Organization<br>+ Validator info</div></div>
+                    <div class="g-arrow">›</div>
+                    <div class="g-flow-step"><div class="g-num">2</div><div class="g-ftitle">Activity Type</div><div class="g-fdesc">Recurring task<br>(e.g. Shelving Books)</div></div>
+                    <div class="g-arrow">›</div>
+                    <div class="g-flow-step"><div class="g-num">3</div><div class="g-ftitle">Add Log</div><div class="g-fdesc">Date + Hours<br>+ Note</div></div>
+                    <div class="g-arrow">›</div>
+                    <div class="g-flow-step g-flow-gold"><div class="g-num g-num-gold">4</div><div class="g-ftitle">📤 Export</div><div class="g-fdesc g-fdesc-gold">.xlsx for<br>Submittable</div></div>
+                </div>
+
+                <div class="g-export-tip">
+                    📤 <strong>Export button</strong> is at the bottom of each section card. Downloads a .xlsx file ready for Submittable submission.
+                </div>
+
+                <div class="g-section-title">Award Level Requirements</div>
+                <table class="g-req-table">
+                    <thead>
+                        <tr><th>Level</th><th>Public Service</th><th>Development</th><th>Fitness</th><th>Expedition</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Bronze Certificate</td><td>50 hrs · 3 mo</td><td>25 hrs · 3 mo</td><td>25 hrs · 3 mo</td><td>1 day</td></tr>
+                        <tr><td>Silver Certificate</td><td>100 hrs · 6 mo</td><td>50 hrs · 6 mo</td><td>50 hrs · 6 mo</td><td>2 days · 1 night</td></tr>
+                        <tr><td>Gold Certificate</td><td>150 hrs · 9 mo</td><td>75 hrs · 9 mo</td><td>75 hrs · 9 mo</td><td>2 days · 1 night</td></tr>
+                        <tr><td>Bronze Medal</td><td>100 hrs · 6 mo</td><td>50 hrs · 6 mo</td><td>50 hrs · 6 mo</td><td>2 days · 1 night</td></tr>
+                        <tr><td>Silver Medal</td><td>200 hrs · 12 mo</td><td>100 hrs · 12 mo</td><td>100 hrs · 12 mo</td><td>3 days · 2 nights</td></tr>
+                        <tr><td>Gold Medal</td><td>400 hrs · 24 mo</td><td>200 hrs · 24 mo</td><td>200 hrs · 24 mo</td><td>4 days · 3 nights</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="g-tips-card">
+                    <h4>💡 Tips</h4>
+                    <div class="g-tip-row"><span class="g-tip-icon">✅</span><span class="g-tip-text">Log activities within a week — don't let them pile up</span></div>
+                    <div class="g-tip-row"><span class="g-tip-icon">✅</span><span class="g-tip-text">Save your Validator's email when creating a Goal — required for Submittable</span></div>
+                    <div class="g-tip-row"><span class="g-tip-icon">✅</span><span class="g-tip-text">A month counts only if you logged 1 hour or more that month</span></div>
+                    <div class="g-tip-row"><span class="g-tip-icon">✅</span><span class="g-tip-text">Max 8 hours per day can be logged</span></div>
+                    <div class="g-tip-row"><span class="g-tip-icon">⚠️</span><span class="g-tip-text">Expedition travel days (departure/return) may not count — confirm with your advisor</span></div>
+                </div>
+
+                <div class="g-footer">
+                    Free for all Congressional Award students &nbsp;·&nbsp; Data saved locally on your device &nbsp;·&nbsp; No account required
+                </div>
+
+            </div>
+        </div>
+    </div>
 </div>
 </body>
 </html>
