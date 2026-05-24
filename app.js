@@ -79,6 +79,7 @@ const CAT_KEYS = {
 
 function save() {
     localStorage.setItem('goals', JSON.stringify(goals));
+    if (window.FB && window.FB.getCurrentUid()) syncToFirestore();
 }
 
 function today() {
@@ -110,6 +111,7 @@ let editingActIdx  = -1;
 
 function saveExpTrips() {
     localStorage.setItem('expTrips', JSON.stringify(expTrips));
+    if (window.FB && window.FB.getCurrentUid()) syncToFirestore();
 }
 
 // ── Trip 날짜 자동계산 ──
@@ -1094,4 +1096,178 @@ function closeGuide() {
 // ESC 키로 닫기
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeGuide();
+});
+
+// ════════════════════════════════════════════
+// Firebase 연동
+// ════════════════════════════════════════════
+
+// FB 객체는 firebase.js에서 window.FB로 노출됨
+// type="module" 로드 완료 후 사용 가능
+
+// ── 화면 전환 헬퍼 ──
+function showScreen(screenId) {
+    ['splash-screen','login-screen','setup-screen','main-screen'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+    var target = document.getElementById(screenId);
+    if (target) target.style.display = 'flex';
+}
+
+// ── Google 로그인 ──
+async function handleGoogleSignIn() {
+    var btn = document.querySelector('.google-signin-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Signing in...'; }
+    try {
+        var user = await window.FB.signInWithGoogle();
+        await loadUserData(user);
+    } catch(e) {
+        alert('Sign in failed. Please try again.');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"> Sign in with Google';
+        }
+    }
+}
+
+// ── 로그아웃 ──
+async function handleSignOut() {
+    if (!confirm('Sign out of Award Compass?')) return;
+    await window.FB.signOutUser();
+    // 메모리 초기화
+    goals = { 'Voluntary Public Service':[], 'Personal Development':[], 'Physical Fitness':[], 'Expedition':[] };
+    selectedLevel = '';
+    showScreen('login-screen');
+}
+
+// ── 유저 데이터 불러오기 (로그인 후) ──
+async function loadUserData(user) {
+    var uid = user.uid;
+
+    // 프로필 불러오기
+    var profile = await window.FB.loadProfile(uid);
+
+    if (!profile || !profile.activeLevel) {
+        // 처음 로그인 → Setup 화면
+        showScreen('setup-screen');
+        return;
+    }
+
+    // 기존 유저 → 데이터 로드 후 메인
+    selectedLevel = profile.activeLevel;
+    var levelName = profile.activeLevel;
+
+    // localStorage에도 캐시
+    localStorage.setItem('userName',      profile.name      || user.displayName || '');
+    localStorage.setItem('selectedLevel', profile.activeLevel);
+    localStorage.setItem('startDate',     profile.startDate || '');
+
+    // Firestore에서 goals, trips 로드
+    var savedGoals = await window.FB.loadLevelData(uid, levelName, 'goals');
+    var savedTrips = await window.FB.loadLevelData(uid, levelName, 'trips');
+
+    if (savedGoals) {
+        goals = savedGoals;
+        localStorage.setItem('goals', JSON.stringify(goals));
+    }
+    if (savedTrips) {
+        expTrips = savedTrips;
+        localStorage.setItem('expTrips', JSON.stringify(expTrips));
+    }
+
+    // 메인 화면 표시
+    document.getElementById('login-screen').style.display  = 'none';
+    document.getElementById('setup-screen').style.display  = 'none';
+    document.getElementById('main-screen').style.display   = 'block';
+    document.getElementById('header-name').textContent     =
+        (profile.name || user.displayName) + ' | ' + profile.activeLevel;
+
+    CATS.forEach(function(c) { updateDisplay(c); renderGoals(c); });
+    updateBadges(selectedLevel);
+    renderExpedition();
+    var lastTab = localStorage.getItem('activeTab') || 'vps';
+    showTab(lastTab);
+}
+
+// ── Firestore 저장 헬퍼 (goals, trips 변경 시 호출) ──
+async function syncToFirestore() {
+    var uid = window.FB.getCurrentUid();
+    if (!uid || !selectedLevel) return;
+    try {
+        await window.FB.saveLevelData(uid, selectedLevel, 'goals', goals);
+        await window.FB.saveLevelData(uid, selectedLevel, 'trips', expTrips);
+    } catch(e) {
+        console.warn('Firestore sync failed (offline?):', e);
+    }
+}
+
+// ── startApp 오버라이드: Setup 완료 시 Firestore에 저장 ──
+var _origStartApp = startApp;
+startApp = async function() {
+    var name      = document.getElementById('setup-name').value.trim();
+    var level     = document.getElementById('setup-level').value;
+    var startDate = document.getElementById('setup-startdate').value;
+
+    if (!name)      { alert('Please enter your name!'); return; }
+    if (!level)     { alert('Please select your target award level!'); return; }
+    if (!startDate) { alert('Please select your program start date!'); return; }
+
+    selectedLevel = level;
+    localStorage.setItem('selectedLevel', level);
+    localStorage.setItem('userName',      name);
+    localStorage.setItem('startDate',     startDate);
+
+    // Firestore 프로필 저장
+    var uid = window.FB.getCurrentUid();
+    if (uid) {
+        await window.FB.saveProfile(uid, {
+            name:        name,
+            activeLevel: level,
+            startDate:   startDate,
+            updatedAt:   new Date().toISOString()
+        });
+        await window.FB.saveLevelData(uid, level, 'goals', goals);
+        await window.FB.saveLevelData(uid, level, 'trips', expTrips);
+    }
+
+    document.getElementById('setup-screen').style.display = 'none';
+    document.getElementById('main-screen').style.display  = 'block';
+    document.getElementById('header-name').textContent    = name + ' | ' + level;
+
+    CATS.forEach(function(c) { updateDisplay(c); });
+    updateBadges(level);
+};
+
+// ── Auth 상태 감지 (firebase.js 로드 후) ──
+window.addEventListener('load', function() {
+    // firebase.js가 type="module"이라 약간 늦게 로드됨
+    // splash 종료(3.8s) 후 FB 객체 사용
+    setTimeout(function() {
+        if (!window.FB) {
+            // Firebase 로드 실패 → localStorage 폴백
+            console.warn('Firebase not loaded, falling back to localStorage');
+            return;
+        }
+        window.FB.onAuthChange(function(user) {
+            if (user) {
+                // 이미 로그인 상태
+                loadUserData(user);
+            } else {
+                // 비로그인 → 로그인 화면
+                // splash가 아직 표시 중이면 splash 종료 후 표시
+                setTimeout(function() {
+                    var splash = document.getElementById('splash-screen');
+                    if (!splash || splash.style.display === 'none') {
+                        showScreen('login-screen');
+                    } else {
+                        // splash 종료 시점(3.8s)에 맞춰 표시
+                        setTimeout(function() {
+                            showScreen('login-screen');
+                        }, 4000);
+                    }
+                }, 100);
+            }
+        });
+    }, 500);
 });

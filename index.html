@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Award Compass</title>
     <link rel="stylesheet" href="style.css">
+    <script type="module" src="firebase.js"></script>
 </head>
 <body>
 
@@ -54,6 +55,21 @@
     </div>
 </div>
 
+<!-- ── Login Screen ── -->
+<div id="login-screen" style="display:none">
+    <div class="login-card">
+        <div class="login-compass">🧭</div>
+        <h1 class="login-title">Award Compass</h1>
+        <p class="login-sub">Congressional Award Tracker</p>
+        <p class="login-desc">Sign in to save your progress and access your data from any device.</p>
+        <button class="google-signin-btn" onclick="handleGoogleSignIn()">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+            Sign in with Google
+        </button>
+        <p class="login-privacy">Your data is private and only accessible by you.</p>
+    </div>
+</div>
+
 <!-- ── Setup Screen ── -->
 <div id="setup-screen">
     <h1>Award Compass</h1>
@@ -91,6 +107,7 @@
             <button class="add-btn" onclick="exportCSV()">📤 Export CSV</button>
             <button class="guide-btn" onclick="openGuide()">📖 Guide</button>
             <button class="reset-btn" onclick="openSettingsModal()">⚙️ Settings</button>
+            <button class="logout-btn" onclick="handleSignOut()">🚪 Sign Out</button>
         </div>
     </header>
 

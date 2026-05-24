@@ -1424,3 +1424,139 @@ header p {
     .g-tip-text { font-size: 13px; }
     .g-section-title { font-size: 13px; }
 }
+
+/* ══════════════════════════════════════════
+   Login Screen
+   ══════════════════════════════════════════ */
+#login-screen {
+    min-height: 100vh;
+    background: #1A3A6B;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.login-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 48px 40px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.login-compass {
+    font-size: 56px;
+    margin-bottom: 12px;
+}
+
+.login-title {
+    font-family: Georgia, serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: #1A3A6B;
+    margin-bottom: 6px;
+}
+
+.login-sub {
+    font-size: 12px;
+    color: #7AAAD4;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+}
+
+.login-desc {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 32px;
+}
+
+.google-signin-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 24px;
+    background: #fff;
+    border: 2px solid #E0E8F0;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1A3A6B;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 16px;
+}
+
+.google-signin-btn:hover {
+    background: #F4F7FB;
+    border-color: #1A3A6B;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.google-signin-btn img {
+    width: 20px;
+    height: 20px;
+}
+
+.login-privacy {
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 8px;
+}
+
+/* 로그아웃 버튼 */
+.logout-btn {
+    background: transparent;
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.logout-btn:hover {
+    background: rgba(255,255,255,0.15);
+    border-color: #fff;
+}
+
+/* 레벨 선택 화면 (Setup → Level Select) */
+#level-select-screen {
+    min-height: 100vh;
+    background: #f0f4f8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.level-select-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 40px 32px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.level-select-card h2 {
+    font-family: Georgia, serif;
+    font-size: 24px;
+    color: #1A3A6B;
+    margin-bottom: 8px;
+}
+
+.level-select-card p {
+    font-size: 13px;
+    color: #777;
+    margin-bottom: 24px;
+}
