@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Congressional Award Tracker</title>
+    <title>Award Compass</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -56,7 +56,7 @@
 
 <!-- ── Setup Screen ── -->
 <div id="setup-screen">
-    <h1>Congressional Award Tracker</h1>
+    <h1>Award Compass</h1>
     <p>Track your journey. Build your story. Own your future.</p>
     <div class="setup-card">
         <label>Your Name</label>
@@ -84,7 +84,7 @@
 <div id="main-screen" style="display:none">
 
     <header>
-        <h1>Congressional Award Tracker</h1>
+        <h1>Award Compass</h1>
         <p id="header-name"></p>
         <p>Built by Kyle (Jiyul) Choi — Mill Creek High School, Class of 2026</p>
         <div class="header-btns">
@@ -221,7 +221,7 @@
             <input type="date" id="log-date" class="input-field">
             <label>Hours (max 8)</label>
             <input type="number" id="log-hours" class="input-field"
-                   placeholder="e.g. 2.5" min="0.25" max="8" step="0.25">
+                   placeholder="e.g. 2.5" min="0.5" max="8" step="0.5">
             <label>Note <span style="font-weight:normal;color:#aaa;">(optional)</span></label>
             <input type="text" id="log-note" class="input-field"
                    placeholder="e.g. Helped 15 seniors with meals">
@@ -343,7 +343,6 @@
                 </div>
 
                 <div class="g-section-title">Award Level Requirements</div>
-                <div class="g-req-table-wrap">
                 <table class="g-req-table">
                     <thead>
                         <tr><th>Level</th><th>Public Service</th><th>Development</th><th>Fitness</th><th>Expedition</th></tr>
@@ -357,7 +356,8 @@
                         <tr><td>Gold Medal</td><td>400 hrs · 24 mo</td><td>200 hrs · 24 mo</td><td>200 hrs · 24 mo</td><td>4 days · 3 nights</td></tr>
                     </tbody>
                 </table>
-                </div><!-- g-req-table-wrap -->
+
+                <div class="g-tips-card">
                     <h4>💡 Tips</h4>
                     <div class="g-tip-row"><span class="g-tip-icon">✅</span><span class="g-tip-text">Log activities within a week — don't let them pile up</span></div>
                     <div class="g-tip-row"><span class="g-tip-icon">✅</span><span class="g-tip-text">Save your Validator's email when creating a Goal — required for Submittable</span></div>
