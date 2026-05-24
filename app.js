@@ -1118,6 +1118,12 @@ function showScreen(screenId) {
 // ── Google 로그인 ──
 async function handleGoogleSignIn() {
     var btn = document.querySelector('.google-signin-btn');
+    var keepSignedIn = document.getElementById('keep-signed-in');
+    var shouldKeep = keepSignedIn ? keepSignedIn.checked : true;
+
+    // 자동 로그인 설정 저장
+    localStorage.setItem('keepSignedIn', shouldKeep ? 'true' : 'false');
+
     if (btn) { btn.disabled = true; btn.textContent = 'Signing in...'; }
     try {
         var user = await window.FB.signInWithGoogle();
@@ -1261,17 +1267,28 @@ window.addEventListener('load', function() {
         }
         window.FB.onAuthChange(function(user) {
             if (user) {
-                // 이미 로그인 상태
+                // 수동 로그아웃 플래그 체크
+                if (localStorage.getItem('manualSignOut') === 'true') {
+                    localStorage.removeItem('manualSignOut');
+                    window.FB.signOutUser();
+                    showScreen('login-screen');
+                    return;
+                }
+                // Keep me signed in 체크 안 했으면 자동 로그인 안 함
+                if (localStorage.getItem('keepSignedIn') === 'false') {
+                    window.FB.signOutUser();
+                    showScreen('login-screen');
+                    return;
+                }
+                // 자동 로그인
                 loadUserData(user);
             } else {
-                // 비로그인 → 로그인 화면
-                // splash가 아직 표시 중이면 splash 종료 후 표시
+                localStorage.removeItem('manualSignOut');
                 setTimeout(function() {
                     var splash = document.getElementById('splash-screen');
                     if (!splash || splash.style.display === 'none') {
                         showScreen('login-screen');
                     } else {
-                        // splash 종료 시점(3.8s)에 맞춰 표시
                         setTimeout(function() {
                             showScreen('login-screen');
                         }, 4000);
