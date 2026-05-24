@@ -1134,11 +1134,18 @@ async function handleGoogleSignIn() {
 // ── 로그아웃 ──
 async function handleSignOut() {
     if (!confirm('Sign out of Award Compass?')) return;
-    await window.FB.signOutUser();
+    try {
+        await window.FB.signOutUser();
+    } catch(e) {
+        console.warn('Sign out error:', e);
+    }
+    // localStorage 완전 초기화
+    localStorage.clear();
     // 메모리 초기화
     goals = { 'Voluntary Public Service':[], 'Personal Development':[], 'Physical Fitness':[], 'Expedition':[] };
     selectedLevel = '';
-    showScreen('login-screen');
+    // 페이지 리로드로 완전한 초기화 (가장 안전한 방법)
+    window.location.reload();
 }
 
 // ── 유저 데이터 불러오기 (로그인 후) ──
@@ -1183,11 +1190,14 @@ async function loadUserData(user) {
     document.getElementById('header-name').textContent     =
         (profile.name || user.displayName) + ' | ' + profile.activeLevel;
 
-    CATS.forEach(function(c) { updateDisplay(c); renderGoals(c); });
-    updateBadges(selectedLevel);
-    renderExpedition();
-    var lastTab = localStorage.getItem('activeTab') || 'vps';
-    showTab(lastTab);
+    // DOM 업데이트 후 render (한 프레임 대기)
+    setTimeout(function() {
+        CATS.forEach(function(c) { updateDisplay(c); renderGoals(c); });
+        updateBadges(selectedLevel);
+        renderExpedition();
+        var lastTab = localStorage.getItem('activeTab') || 'vps';
+        showTab(lastTab);
+    }, 50);
 }
 
 // ── Firestore 저장 헬퍼 (goals, trips 변경 시 호출) ──
