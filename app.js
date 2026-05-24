@@ -1001,25 +1001,9 @@ function resetAllData() {
 // ════════════════════════════════════════════
 
 window.onload = function() {
-    let savedName  = localStorage.getItem('userName');
-    let savedLevel = localStorage.getItem('selectedLevel');
-
-    if (savedName && savedLevel) {
-        selectedLevel = savedLevel;
-        document.getElementById('setup-screen').style.display = 'none';
-        document.getElementById('main-screen').style.display  = 'block';
-        document.getElementById('header-name').textContent    = savedName + ' | ' + savedLevel;
-
-        CATS.forEach(function(c) {
-            updateDisplay(c);
-            renderGoals(c);
-        });
-        updateBadges(savedLevel);
-        renderExpedition();
-        // 마지막으로 열었던 탭 복원
-        let lastTab = localStorage.getItem('activeTab') || 'vps';
-        showTab(lastTab);
-    }
+    // Firebase 연동 버전에서는 onAuthChange가 로그인 처리
+    // window.onload에서 localStorage 기반 자동 로그인 제거
+    // (firebase.js 로드 후 onAuthChange 콜백에서 처리)
 };
 // ════════════════════════════════════════════
 // Splash Screen
@@ -1112,7 +1096,13 @@ function showScreen(screenId) {
         if (el) el.style.display = 'none';
     });
     var target = document.getElementById(screenId);
-    if (target) target.style.display = 'flex';
+    if (!target) return;
+    // 화면별 display 값 구분
+    if (screenId === 'main-screen') {
+        target.style.display = 'block';
+    } else {
+        target.style.display = 'flex';
+    }
 }
 
 // ── Google 로그인 ──
