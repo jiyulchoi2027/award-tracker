@@ -82,7 +82,7 @@
         <label>Your Name</label>
         <input type="text" id="setup-name" class="input-field" placeholder="Enter your name">
         <label>Target Award Level</label>
-        <select id="setup-level" class="input-field">
+        <select id="setup-level" class="input-field" onchange="togglePriorAward('setup')">
             <option value="" disabled selected>Select your target level</option>
             <option>Bronze Certificate</option>
             <option>Silver Certificate</option>
@@ -96,6 +96,19 @@
         <p style="font-size:11px;color:#999;margin-top:-6px;margin-bottom:10px;">
             The date you officially began your Congressional Award program.
         </p>
+
+        <!-- 이전 수상 기록 입력 -->
+        <div id="setup-prior-section" style="display:none">
+            <div class="prior-award-divider">
+                <span>Prior Award Records</span>
+            </div>
+            <p class="prior-award-hint">
+                Already earned a lower level? Enter your officially recognized hours below.
+                These will be shown separately in your progress bar.
+            </p>
+            <div id="setup-prior-inputs"></div>
+        </div>
+
         <button class="add-btn" onclick="startApp()">Start Tracking!</button>
     </div>
 </div>
@@ -144,7 +157,9 @@
                     <span class="badge badge-silver" id="vps-badge">Silver Medal: 200 hrs</span>
                 </h3>
                 <div class="progress-bar-bg">
-                    <div class="progress-bar-fill" id="vps-bar" style="width:0%"></div>
+                    <div class="progress-bar-bronze" id="vps-bar-bronze" style="width:0%"></div>
+                    <div class="progress-bar-silver" id="vps-bar-silver" style="width:0%"></div>
+                    <div class="progress-bar-fill"   id="vps-bar"        style="width:0%"></div>
                 </div>
                 <p class="progress-text" id="vps-text">0 / 200 hours completed (Silver Medal)</p>
                 <p class="progress-text" id="vps-months">Active months: 0 / 12 months</p>
@@ -160,7 +175,9 @@
                     <span class="badge badge-silver" id="pd-badge">Silver Medal: 100 hrs</span>
                 </h3>
                 <div class="progress-bar-bg">
-                    <div class="progress-bar-fill" id="pd-bar" style="width:0%"></div>
+                    <div class="progress-bar-bronze" id="pd-bar-bronze" style="width:0%"></div>
+                    <div class="progress-bar-silver" id="pd-bar-silver" style="width:0%"></div>
+                    <div class="progress-bar-fill"   id="pd-bar"        style="width:0%"></div>
                 </div>
                 <p class="progress-text" id="pd-text">0 / 100 hours completed (Silver Medal)</p>
                 <p class="progress-text" id="pd-months">Active months: 0 / 12 months</p>
@@ -176,7 +193,9 @@
                     <span class="badge badge-silver" id="pf-badge">Silver Medal: 100 hrs</span>
                 </h3>
                 <div class="progress-bar-bg">
-                    <div class="progress-bar-fill" id="pf-bar" style="width:0%"></div>
+                    <div class="progress-bar-bronze" id="pf-bar-bronze" style="width:0%"></div>
+                    <div class="progress-bar-silver" id="pf-bar-silver" style="width:0%"></div>
+                    <div class="progress-bar-fill"   id="pf-bar"        style="width:0%"></div>
                 </div>
                 <p class="progress-text" id="pf-text">0 / 100 hours completed (Silver Medal)</p>
                 <p class="progress-text" id="pf-months">Active months: 0 / 12 months</p>
@@ -192,7 +211,9 @@
                     <span class="badge badge-silver" id="exp-badge">Silver Medal: 3 days / 2 nights</span>
                 </h3>
                 <div class="progress-bar-bg">
-                    <div class="progress-bar-fill" id="exp-bar" style="width:0%"></div>
+                    <div class="progress-bar-bronze" id="exp-bar-bronze" style="width:0%"></div>
+                    <div class="progress-bar-silver" id="exp-bar-silver" style="width:0%"></div>
+                    <div class="progress-bar-fill"   id="exp-bar"        style="width:0%"></div>
                 </div>
                 <p class="progress-text" id="exp-text">0 / 3 days — Silver Medal</p>
                 <div id="exp-trips-list"></div>
@@ -300,7 +321,7 @@
             <label>Name</label>
             <input type="text" id="settings-name" class="input-field" placeholder="Your name">
             <label>Award Level</label>
-            <select id="settings-level" class="input-field">
+            <select id="settings-level" class="input-field" onchange="togglePriorAward('settings')">
                 <option value="" disabled>Select level</option>
                 <option>Bronze Certificate</option>
                 <option>Silver Certificate</option>
@@ -311,6 +332,18 @@
             </select>
             <label>Program Start Date</label>
             <input type="date" id="settings-startdate" class="input-field">
+
+            <!-- 이전 수상 기록 -->
+            <div id="settings-prior-section" style="display:none">
+                <div class="prior-award-divider">
+                    <span>Prior Award Records</span>
+                </div>
+                <p class="prior-award-hint">
+                    Enter your officially recognized hours from previously earned levels.
+                </p>
+                <div id="settings-prior-inputs"></div>
+            </div>
+
             <div class="modal-buttons">
                 <button class="save-btn" onclick="saveSettings()">Save</button>
                 <button class="cancel-btn" onclick="closeSettingsModal()">Cancel</button>

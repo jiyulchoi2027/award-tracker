@@ -56,6 +56,9 @@ let currentGoalIndex    = -1;
 let currentActivityIndex= -1;
 let editingLogIndex     = -1;   // 수정 중인 log 인덱스 (-1 = 신규)
 
+// 이전 수상 기록 (수기 입력)
+let priorAwards = JSON.parse(localStorage.getItem('priorAwards') || '{}');
+
 // ─── 데이터 구조 ───
 // goals[category] = [{
 //   name, validator, email,
@@ -714,40 +717,84 @@ function updateDisplay(category) {
     let req        = REQUIREMENTS[selectedLevel];
     let sectionKey = CAT_KEYS[category];
 
-    // 진행률 계산
-    let percent = 0;
+    // ── 이전 수상 기록 (브론즈/실버 분리) ──
+    var prior = getPriorByLevel();
+    var priorBronze = prior.bronze[sectionKey] || 0;
+    var priorSilver = prior.silver[sectionKey] || 0;
+    var priorTotal  = priorBronze + priorSilver;
+
+    // ── 진행률 계산 ──
+    let targetHours = 0;
     let completedDays = 0;
+    let percent = 0;
+
     if (sectionKey === 'exp') {
-        // travel days 제외한 countableDays 기준
         expTrips.forEach(function(t) { completedDays += (t.countableDays || t.days || 0); });
-        percent = Math.min((completedDays / req.exp.days) * 100, 100);
+        var priorDays = (prior.bronze.exp || 0) + (prior.silver.exp || 0);
+        var totalDays = completedDays + priorDays;
+        percent = Math.min((totalDays / req.exp.days) * 100, 100);
+
+        // 진행률 바 (Expedition은 단순 1색 + prior)
+        var bronzeBarEl = document.getElementById(barId + '-bronze');
+        var silverBarEl = document.getElementById(barId + '-silver');
+        var newBarEl    = document.getElementById(barId);
+
+        var bronzePct = Math.min((prior.bronze.exp / req.exp.days) * 100, 100);
+        var silverPct = Math.min((prior.silver.exp / req.exp.days) * 100, 100 - bronzePct);
+        var newPct    = Math.min((completedDays    / req.exp.days) * 100, 100 - bronzePct - silverPct);
+
+        if (bronzeBarEl) bronzeBarEl.style.width = bronzePct.toFixed(1) + '%';
+        if (silverBarEl) silverBarEl.style.width = silverPct.toFixed(1) + '%';
+        if (newBarEl) {
+            newBarEl.style.width = newPct.toFixed(1) + '%';
+            newBarEl.style.backgroundColor = percent >= 100 ? '#27ae60' : '#1a3a6b';
+        }
+
     } else {
-        percent = Math.min((totalHours / req[sectionKey].hours) * 100, 100);
+        targetHours = req[sectionKey].hours;
+        var totalAll = totalHours + priorTotal;
+        percent = Math.min((totalAll / targetHours) * 100, 100);
+
+        // 3색 진행률 바
+        var bronzeBarEl = document.getElementById(barId + '-bronze');
+        var silverBarEl = document.getElementById(barId + '-silver');
+        var newBarEl    = document.getElementById(barId);
+
+        var bronzePct = Math.min((priorBronze / targetHours) * 100, 100);
+        var silverPct = Math.min((priorSilver / targetHours) * 100, 100 - bronzePct);
+        var newPct    = Math.min((totalHours  / targetHours) * 100, 100 - bronzePct - silverPct);
+
+        if (bronzeBarEl) bronzeBarEl.style.width = bronzePct.toFixed(1) + '%';
+        if (silverBarEl) silverBarEl.style.width = silverPct.toFixed(1) + '%';
+        if (newBarEl) {
+            newBarEl.style.width = newPct.toFixed(1) + '%';
+            newBarEl.style.backgroundColor = percent >= 100 ? '#27ae60' : '#1a3a6b';
+        }
     }
 
-    // 진행률 바 색상 (100% 달성 시 녹색)
-    let barEl = document.getElementById(barId);
-    barEl.style.width = percent.toFixed(1) + '%';
-    barEl.style.backgroundColor = percent >= 100 ? '#27ae60' : '#1a3a6b';
-
-    // 텍스트
+    // ── 텍스트 ──
     let textEl = document.getElementById(textId);
     if (sectionKey === 'exp') {
-        let completedNights = expTrips.reduce(function(s,t){ return s+(t.nights||0); }, 0);
-        let nightsReq = req.exp.nights;
-        let nightsStr = nightsReq > 0
-            ? ' | ' + completedNights + ' / ' + nightsReq + ' nights'
-            : '';
-        textEl.textContent =
-            completedDays + ' / ' + req.exp.days + ' days' + nightsStr +
-            ' — ' + selectedLevel + (percent >= 100 ? ' ✅' : '');
+        var priorDaysTotal = (prior.bronze.exp || 0) + (prior.silver.exp || 0);
+        var totalDays2 = completedDays + priorDaysTotal;
+        var completedNights = expTrips.reduce(function(s,t){ return s+(t.nights||0); }, 0);
+        var nightsReq = req.exp.nights;
+        var nightsStr = nightsReq > 0 ? ' | ' + completedNights + ' / ' + nightsReq + ' nights' : '';
+        var priorStr  = priorDaysTotal > 0 ? ' (' + priorDaysTotal + ' carried over)' : '';
+        textEl.textContent = totalDays2 + ' / ' + req.exp.days + ' days' + nightsStr +
+            ' — ' + selectedLevel + priorStr + (percent >= 100 ? ' ✅' : '');
     } else {
-        let done = percent >= 100 ? ' ✅' : '';
-        textEl.textContent =
-            totalHours + ' / ' + req[sectionKey].hours + ' hours completed (' + selectedLevel + ')' + done;
+        var totalAll2 = totalHours + priorTotal;
+        var priorParts = [];
+        if (priorBronze > 0) priorParts.push(priorBronze + ' Bronze ✓');
+        if (priorSilver > 0) priorParts.push(priorSilver + ' Silver ✓');
+        var priorStr2 = priorParts.length > 0 ? ' (' + priorParts.join(' + ') + ')' : '';
+        var done = percent >= 100 ? ' ✅' : '';
+        textEl.textContent = totalAll2 + ' / ' + req[sectionKey].hours +
+            ' hours completed (' + selectedLevel + ')' + priorStr2 + done;
     }
 
-    // 월 요건
+    // ── 월 요건 ──
     if (monthsId) {
         let monthReq = req[sectionKey].months;
         let monthEl  = document.getElementById(monthsId);
@@ -914,6 +961,121 @@ function exportCSV() {
 // ════════════════════════════════════════════
 // 앱 시작
 // ════════════════════════════════════════════
+// 이전 수상 기록 UI
+// ════════════════════════════════════════════
+
+// 레벨별 하위 레벨 맵
+const LEVEL_ORDER = [
+    'Bronze Certificate', 'Silver Certificate', 'Gold Certificate',
+    'Bronze Medal', 'Silver Medal', 'Gold Medal'
+];
+
+// 해당 레벨보다 낮은 레벨 목록 반환
+function getLowerLevels(level) {
+    var idx = LEVEL_ORDER.indexOf(level);
+    if (idx <= 0) return [];
+    return LEVEL_ORDER.slice(0, idx);
+}
+
+// 레벨 선택 시 이전 수상 기록 입력 섹션 토글
+function togglePriorAward(context) {
+    var prefix  = context; // 'setup' or 'settings'
+    var levelEl = document.getElementById(prefix + '-level');
+    var section = document.getElementById(prefix + '-prior-section');
+    var inputsEl= document.getElementById(prefix + '-prior-inputs');
+
+    if (!levelEl || !section || !inputsEl) return;
+
+    var level  = levelEl.value;
+    var lowers = getLowerLevels(level);
+
+    if (lowers.length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+
+    // 입력 폼 생성
+    var html = '';
+    lowers.forEach(function(lv) {
+        var saved = priorAwards[lv] || {};
+        var color = lv.includes('Bronze') ? '#cd7f32' : '#aaa';
+        html += '<div class="prior-level-block" style="border-left:3px solid ' + color + '">';
+        html += '<p class="prior-level-title" style="color:' + color + '">✓ ' + escapeHtml(lv) + '</p>';
+
+        if (lv.includes('Certificate') || lv.includes('Medal')) {
+            var req = REQUIREMENTS[lv];
+            html += '<div class="prior-inputs-grid">';
+            html += '<div class="prior-input-item"><label>VPS (max ' + req.vps.hours + ' hrs)</label>';
+            html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-vps" min="0" max="' + req.vps.hours + '" step="0.25" value="' + (saved.vps || 0) + '"></div>';
+
+            html += '<div class="prior-input-item"><label>Personal Dev (max ' + req.pd.hours + ' hrs)</label>';
+            html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pd" min="0" max="' + req.pd.hours + '" step="0.25" value="' + (saved.pd || 0) + '"></div>';
+
+            html += '<div class="prior-input-item"><label>Physical Fitness (max ' + req.pf.hours + ' hrs)</label>';
+            html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pf" min="0" max="' + req.pf.hours + '" step="0.25" value="' + (saved.pf || 0) + '"></div>';
+
+            html += '<div class="prior-input-item"><label>Expedition (max ' + req.exp.days + ' days)</label>';
+            html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-exp" min="0" max="' + req.exp.days + '" step="1" value="' + (saved.exp || 0) + '"></div>';
+            html += '</div>';
+        }
+        html += '</div>';
+    });
+
+    inputsEl.innerHTML = html;
+    section.style.display = 'block';
+}
+
+// 입력된 이전 수상 기록 읽기
+function readPriorInputs(context) {
+    var levelEl = document.getElementById(context + '-level');
+    if (!levelEl) return {};
+    var level  = levelEl.value;
+    var lowers = getLowerLevels(level);
+    var result = {};
+
+    lowers.forEach(function(lv) {
+        var key = lv.replace(/\s/g,'_');
+        var vps = parseFloat(document.getElementById('prior-' + context + '-' + key + '-vps')?.value || 0);
+        var pd  = parseFloat(document.getElementById('prior-' + context + '-' + key + '-pd')?.value  || 0);
+        var pf  = parseFloat(document.getElementById('prior-' + context + '-' + key + '-pf')?.value  || 0);
+        var exp = parseFloat(document.getElementById('prior-' + context + '-' + key + '-exp')?.value || 0);
+        if (vps || pd || pf || exp) {
+            result[lv] = { vps: vps, pd: pd, pf: pf, exp: exp };
+        }
+    });
+    return result;
+}
+
+// priorAwards 저장
+function savePriorAwards(data) {
+    priorAwards = data;
+    localStorage.setItem('priorAwards', JSON.stringify(priorAwards));
+}
+
+// 이전 수상 기록 총합 반환 (카테고리별)
+function getPriorTotal(catKey) {
+    var total = 0;
+    Object.values(priorAwards).forEach(function(rec) {
+        total += (rec[catKey] || 0);
+    });
+    return total;
+}
+
+// 이전 수상 기록 레벨별 반환 (브론즈/실버 구분용)
+function getPriorByLevel() {
+    var bronze = { vps:0, pd:0, pf:0, exp:0 };
+    var silver = { vps:0, pd:0, pf:0, exp:0 };
+    Object.entries(priorAwards).forEach(function(entry) {
+        var lv  = entry[0];
+        var rec = entry[1];
+        if (lv.includes('Bronze')) {
+            ['vps','pd','pf','exp'].forEach(function(k) { bronze[k] += (rec[k]||0); });
+        } else if (lv.includes('Silver')) {
+            ['vps','pd','pf','exp'].forEach(function(k) { silver[k] += (rec[k]||0); });
+        }
+    });
+    return { bronze: bronze, silver: silver };
+}
 
 function startApp() {
     let name      = document.getElementById('setup-name').value.trim();
@@ -928,6 +1090,9 @@ function startApp() {
     localStorage.setItem('selectedLevel', level);
     localStorage.setItem('userName', name);
     localStorage.setItem('startDate', startDate);
+
+    // 이전 수상 기록 저장
+    savePriorAwards(readPriorInputs('setup'));
 
     document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('main-screen').style.display  = 'block';
@@ -948,6 +1113,8 @@ function openSettingsModal() {
     document.getElementById('settings-level').value     = localStorage.getItem('selectedLevel') || '';
     document.getElementById('settings-startdate').value = localStorage.getItem('startDate')     || '';
     document.getElementById('settings-modal').style.display = 'flex';
+    // 이전 수상 기록 섹션 로드
+    togglePriorAward('settings');
 }
 
 function closeSettingsModal() {
@@ -968,6 +1135,9 @@ function saveSettings() {
     localStorage.setItem('userName',      name);
     localStorage.setItem('selectedLevel', level);
     localStorage.setItem('startDate',     startDate);
+
+    // 이전 수상 기록 저장
+    savePriorAwards(readPriorInputs('settings'));
 
     document.getElementById('header-name').textContent = name + ' | ' + level;
 
