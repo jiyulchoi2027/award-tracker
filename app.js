@@ -1276,6 +1276,100 @@ function showScreen(screenId) {
 }
 
 // ── Google 로그인 ──
+// ── 이메일 로그인/회원가입 폼 전환 ──
+function showSignUpForm() {
+    document.getElementById('email-login-form').style.display  = 'none';
+    document.getElementById('email-signup-form').style.display = 'block';
+    document.getElementById('login-error').style.display       = 'none';
+}
+
+function showLoginForm() {
+    document.getElementById('email-signup-form').style.display = 'none';
+    document.getElementById('email-login-form').style.display  = 'block';
+    document.getElementById('signup-error').style.display      = 'none';
+}
+
+function showLoginError(msg) {
+    var el = document.getElementById('login-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+
+function showSignUpError(msg) {
+    var el = document.getElementById('signup-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+
+// ── 이메일 로그인 ──
+async function handleEmailSignIn() {
+    var email    = document.getElementById('login-email').value.trim();
+    var password = document.getElementById('login-password').value;
+    document.getElementById('login-error').style.display = 'none';
+
+    if (!email)    { showLoginError('Please enter your email.'); return; }
+    if (!password) { showLoginError('Please enter your password.'); return; }
+
+    try {
+        var user = await window.FB.signInWithEmail(email, password);
+        var keepSignedIn = document.getElementById('keep-signed-in');
+        localStorage.setItem('keepSignedIn', keepSignedIn && keepSignedIn.checked ? 'true' : 'false');
+        await loadUserData(user);
+    } catch(e) {
+        var msg = 'Sign in failed. Please check your email and password.';
+        if (e.code === 'auth/user-not-found')  msg = 'No account found with this email.';
+        if (e.code === 'auth/wrong-password')  msg = 'Incorrect password.';
+        if (e.code === 'auth/invalid-email')   msg = 'Invalid email address.';
+        if (e.code === 'auth/too-many-requests') msg = 'Too many attempts. Please try again later.';
+        showLoginError(msg);
+    }
+}
+
+// ── 이메일 회원가입 ──
+async function handleEmailSignUp() {
+    var email  = document.getElementById('signup-email').value.trim();
+    var pw1    = document.getElementById('signup-password').value;
+    var pw2    = document.getElementById('signup-password2').value;
+    document.getElementById('signup-error').style.display = 'none';
+
+    if (!email)        { showSignUpError('Please enter your email.'); return; }
+    if (!pw1)          { showSignUpError('Please enter a password.'); return; }
+    if (pw1.length < 6){ showSignUpError('Password must be at least 6 characters.'); return; }
+    if (pw1 !== pw2)   { showSignUpError('Passwords do not match.'); return; }
+
+    try {
+        var user = await window.FB.signUpWithEmail(email, pw1);
+        var keepSignedIn = document.getElementById('keep-signed-in');
+        localStorage.setItem('keepSignedIn', keepSignedIn && keepSignedIn.checked ? 'true' : 'false');
+        await loadUserData(user);
+    } catch(e) {
+        var msg = 'Sign up failed. Please try again.';
+        if (e.code === 'auth/email-already-in-use') msg = 'This email is already registered. Please sign in.';
+        if (e.code === 'auth/invalid-email')        msg = 'Invalid email address.';
+        if (e.code === 'auth/weak-password')        msg = 'Password is too weak. Use at least 6 characters.';
+        showSignUpError(msg);
+    }
+}
+
+// ── 비밀번호 재설정 ──
+async function handleForgotPassword() {
+    var email = document.getElementById('login-email').value.trim();
+    if (!email) {
+        showLoginError('Please enter your email address first.');
+        return;
+    }
+    try {
+        await window.FB.resetPassword(email);
+        showLoginError('✅ Password reset email sent! Check your inbox.');
+        document.getElementById('login-error').style.color = '#27ae60';
+    } catch(e) {
+        var msg = 'Failed to send reset email.';
+        if (e.code === 'auth/user-not-found') msg = 'No account found with this email.';
+        if (e.code === 'auth/invalid-email')  msg = 'Invalid email address.';
+        showLoginError(msg);
+    }
+}
+
 async function handleGoogleSignIn() {
     var btn = document.querySelector('.google-signin-btn');
     var keepSignedIn = document.getElementById('keep-signed-in');

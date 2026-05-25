@@ -3,7 +3,8 @@
 // ════════════════════════════════════════════
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged,
+         createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail }
     from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
          collection, getDocs, writeBatch }
@@ -126,6 +127,23 @@ async function loadAllLevels(uid) {
     return snap.docs.map(function(d) { return d.id; });
 }
 
+// Email/Password 회원가입
+async function signUpWithEmail(email, password) {
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    return result.user;
+}
+
+// Email/Password 로그인
+async function signInWithEmail(email, password) {
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    return result.user;
+}
+
+// 비밀번호 재설정 이메일 발송
+async function resetPassword(email) {
+    await sendPasswordResetEmail(auth, email);
+}
+
 // ════════════════════════════════════════════
 // Export
 // ════════════════════════════════════════════
@@ -133,6 +151,7 @@ async function loadAllLevels(uid) {
 window.FB = {
     auth, db,
     signInWithGoogle, signOutUser, onAuthChange,
+    signUpWithEmail, signInWithEmail, resetPassword,
     saveProfile, loadProfile,
     saveLevelData, loadLevelData,
     loadAllLevels,

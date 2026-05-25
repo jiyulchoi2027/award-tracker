@@ -62,10 +62,36 @@
         <h1 class="login-title">Award Compass</h1>
         <p class="login-sub">Congressional Award Tracker</p>
         <p class="login-desc">Sign in to save your progress and access your data from any device.</p>
+
+        <!-- Google 로그인 -->
         <button class="google-signin-btn" onclick="handleGoogleSignIn()">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
             Sign in with Google
         </button>
+
+        <!-- 구분선 -->
+        <div class="login-divider"><span>or</span></div>
+
+        <!-- Email/Password 로그인 -->
+        <div id="email-login-form">
+            <input type="email" id="login-email" class="input-field" placeholder="Email address">
+            <input type="password" id="login-password" class="input-field" placeholder="Password">
+            <div id="login-error" class="login-error" style="display:none"></div>
+            <button class="email-signin-btn" onclick="handleEmailSignIn()">Sign In</button>
+            <button class="email-signup-btn" onclick="showSignUpForm()">Create Account</button>
+            <button class="forgot-pw-btn" onclick="handleForgotPassword()">Forgot password?</button>
+        </div>
+
+        <!-- 회원가입 폼 (기본 숨김) -->
+        <div id="email-signup-form" style="display:none">
+            <input type="email" id="signup-email" class="input-field" placeholder="Email address">
+            <input type="password" id="signup-password" class="input-field" placeholder="Password (min 6 characters)">
+            <input type="password" id="signup-password2" class="input-field" placeholder="Confirm password">
+            <div id="signup-error" class="login-error" style="display:none"></div>
+            <button class="email-signin-btn" onclick="handleEmailSignUp()">Create Account</button>
+            <button class="forgot-pw-btn" onclick="showLoginForm()">← Back to Sign In</button>
+        </div>
+
         <div class="keep-signed-in">
             <input type="checkbox" id="keep-signed-in" checked>
             <label for="keep-signed-in">Keep me signed in</label>
