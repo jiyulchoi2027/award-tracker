@@ -798,11 +798,19 @@ function updateDisplay(category) {
     if (monthsId) {
         let monthReq = req[sectionKey].months;
         let monthEl  = document.getElementById(monthsId);
+        // prior months 합산
+        var priorMonths = 0;
+        Object.values(priorAwards).forEach(function(rec) {
+            var mk = sectionKey + 'Months';
+            priorMonths += (rec[mk] || 0);
+        });
+        var totalMonths = activeMonths + priorMonths;
         if (monthReq === 0) {
-            monthEl.textContent = 'Active months: ' + activeMonths + ' (no month requirement)';
+            monthEl.textContent = 'Active months: ' + totalMonths + ' (no month requirement)';
         } else {
-            let monthDone = activeMonths >= monthReq ? ' ✅' : '';
-            monthEl.textContent = 'Active months: ' + activeMonths + ' / ' + monthReq + ' months' + monthDone;
+            var priorMonthStr = priorMonths > 0 ? ' (' + priorMonths + ' carried over)' : '';
+            let monthDone = totalMonths >= monthReq ? ' ✅' : '';
+            monthEl.textContent = 'Active months: ' + totalMonths + ' / ' + monthReq + ' months' + priorMonthStr + monthDone;
         }
     }
 }
@@ -920,12 +928,18 @@ function toggleLogs(id) {
 // ════════════════════════════════════════════
 
 function updateBadges(level) {
-    let req = REQUIREMENTS[level];
-    document.getElementById('vps-badge').textContent = level + ': ' + req.vps.hours + ' hrs';
-    document.getElementById('pd-badge').textContent  = level + ': ' + req.pd.hours  + ' hrs';
-    document.getElementById('pf-badge').textContent  = level + ': ' + req.pf.hours  + ' hrs';
-    document.getElementById('exp-badge').textContent =
-        level + ': ' + req.exp.days + ' days' +
+    // level 파라미터가 없으면 selectedLevel 사용
+    var lv = level || selectedLevel;
+    if (!lv || !REQUIREMENTS[lv]) return;
+    let req = REQUIREMENTS[lv];
+    var b1 = document.getElementById('vps-badge');
+    var b2 = document.getElementById('pd-badge');
+    var b3 = document.getElementById('pf-badge');
+    var b4 = document.getElementById('exp-badge');
+    if (b1) b1.textContent = lv + ': ' + req.vps.hours + ' hrs';
+    if (b2) b2.textContent = lv + ': ' + req.pd.hours  + ' hrs';
+    if (b3) b3.textContent = lv + ': ' + req.pf.hours  + ' hrs';
+    if (b4) b4.textContent = lv + ': ' + req.exp.days + ' days' +
         (req.exp.nights > 0 ? ' / ' + req.exp.nights + ' nights' : '');
 }
 
@@ -1005,17 +1019,21 @@ function togglePriorAward(context) {
         if (lv.includes('Certificate') || lv.includes('Medal')) {
             var req = REQUIREMENTS[lv];
             html += '<div class="prior-inputs-grid">';
-            html += '<div class="prior-input-item"><label>VPS (max ' + req.vps.hours + ' hrs)</label>';
+            html += '<div class="prior-input-item"><label>VPS Hours (max ' + req.vps.hours + ')</label>';
             html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-vps" min="0" max="' + req.vps.hours + '" step="0.25" value="' + (saved.vps || 0) + '"></div>';
-
-            html += '<div class="prior-input-item"><label>Personal Dev (max ' + req.pd.hours + ' hrs)</label>';
+            html += '<div class="prior-input-item"><label>VPS Months (max ' + req.vps.months + ')</label>';
+            html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-vps-months" min="0" max="' + req.vps.months + '" step="1" value="' + (saved.vpsMonths || 0) + '"></div>';
+            html += '<div class="prior-input-item"><label>Personal Dev Hours (max ' + req.pd.hours + ')</label>';
             html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pd" min="0" max="' + req.pd.hours + '" step="0.25" value="' + (saved.pd || 0) + '"></div>';
-
-            html += '<div class="prior-input-item"><label>Physical Fitness (max ' + req.pf.hours + ' hrs)</label>';
+            html += '<div class="prior-input-item"><label>PD Months (max ' + req.pd.months + ')</label>';
+            html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pd-months" min="0" max="' + req.pd.months + '" step="1" value="' + (saved.pdMonths || 0) + '"></div>';
+            html += '<div class="prior-input-item"><label>Physical Fitness Hours (max ' + req.pf.hours + ')</label>';
             html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pf" min="0" max="' + req.pf.hours + '" step="0.25" value="' + (saved.pf || 0) + '"></div>';
-
+            html += '<div class="prior-input-item"><label>PF Months (max ' + req.pf.months + ')</label>';
+            html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pf-months" min="0" max="' + req.pf.months + '" step="1" value="' + (saved.pfMonths || 0) + '"></div>';
             html += '<div class="prior-input-item"><label>Expedition (max ' + req.exp.days + ' days)</label>';
             html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-exp" min="0" max="' + req.exp.days + '" step="1" value="' + (saved.exp || 0) + '"></div>';
+            html += '<div class="prior-input-item"></div>';
             html += '</div>';
         }
         html += '</div>';
@@ -1035,12 +1053,15 @@ function readPriorInputs(context) {
 
     lowers.forEach(function(lv) {
         var key = lv.replace(/\s/g,'_');
-        var vps = parseFloat(document.getElementById('prior-' + context + '-' + key + '-vps')?.value || 0);
-        var pd  = parseFloat(document.getElementById('prior-' + context + '-' + key + '-pd')?.value  || 0);
-        var pf  = parseFloat(document.getElementById('prior-' + context + '-' + key + '-pf')?.value  || 0);
-        var exp = parseFloat(document.getElementById('prior-' + context + '-' + key + '-exp')?.value || 0);
+        var vps        = parseFloat(document.getElementById('prior-' + context + '-' + key + '-vps')?.value || 0);
+        var vpsMonths  = parseInt(document.getElementById('prior-' + context + '-' + key + '-vps-months')?.value || 0);
+        var pd         = parseFloat(document.getElementById('prior-' + context + '-' + key + '-pd')?.value  || 0);
+        var pdMonths   = parseInt(document.getElementById('prior-' + context + '-' + key + '-pd-months')?.value || 0);
+        var pf         = parseFloat(document.getElementById('prior-' + context + '-' + key + '-pf')?.value  || 0);
+        var pfMonths   = parseInt(document.getElementById('prior-' + context + '-' + key + '-pf-months')?.value || 0);
+        var exp        = parseFloat(document.getElementById('prior-' + context + '-' + key + '-exp')?.value || 0);
         if (vps || pd || pf || exp) {
-            result[lv] = { vps: vps, pd: pd, pf: pf, exp: exp };
+            result[lv] = { vps, vpsMonths, pd, pdMonths, pf, pfMonths, exp };
         }
     });
     return result;
@@ -1097,6 +1118,8 @@ function startApp() {
     document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('main-screen').style.display  = 'block';
     document.getElementById('header-name').textContent    = name + ' | ' + level;
+    var emailEl2 = document.getElementById('header-email');
+    if (emailEl2 && window.FB) emailEl2.textContent = (window.FB.auth.currentUser || {}).email || '';
 
     CATS.forEach(function(c) { updateDisplay(c); });
     updateBadges(level);
@@ -1416,8 +1439,10 @@ async function loadUserData(user) {
     var profile = await window.FB.loadProfile(uid);
 
     if (!profile || !profile.activeLevel) {
-        // 처음 로그인 → Setup 화면
-        showScreen('setup-screen');
+        // 처음 로그인 → Setup 화면 (splash 종료 후)
+        setTimeout(function() {
+            showScreen('setup-screen');
+        }, 4000);
         return;
     }
 
@@ -1449,6 +1474,8 @@ async function loadUserData(user) {
     document.getElementById('main-screen').style.display   = 'block';
     document.getElementById('header-name').textContent     =
         (profile.name || user.displayName) + ' | ' + profile.activeLevel;
+    var emailEl = document.getElementById('header-email');
+    if (emailEl) emailEl.textContent = user.email || '';
 
     // DOM 업데이트 후 render (한 프레임 대기)
     setTimeout(function() {

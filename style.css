@@ -128,7 +128,9 @@ header p {
     background-color: rgba(0,0,0,0.5);
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
+    padding: 20px 0;
+    overflow-y: auto;
     z-index: 1000;
 }
 
@@ -139,6 +141,8 @@ header p {
     padding: 25px;
     width: 400px;
     max-width: 90%;
+    margin: auto;
+    max-height: none;
 }
 
 .modal h3 {
@@ -1746,5 +1750,44 @@ header p {
     font-size: 12px;
     color: #c0392b;
     text-align: left;
+    line-height: 1.5;
+}
+
+/* ══════════════════════════════════════════
+   헤더 버튼 통일 스타일
+   ══════════════════════════════════════════ */
+.header-btn {
+    background: transparent;
+    color: #fff;
+    border: 1.5px solid rgba(255,255,255,0.5);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.header-btn:hover {
+    background: rgba(255,255,255,0.15);
+    border-color: #fff;
+}
+.header-btn-signout {
+    border-color: rgba(240,165,0,0.6);
+    color: #F0A500;
+}
+.header-btn-signout:hover {
+    background: rgba(240,165,0,0.15);
+    border-color: #F0A500;
+}
+
+.exp-note {
+    font-size: 11px;
+    color: #856404;
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 6px;
+    padding: 7px 10px;
+    margin: 8px 0 6px;
     line-height: 1.5;
 }
