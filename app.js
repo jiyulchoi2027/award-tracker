@@ -1439,10 +1439,12 @@ async function loadUserData(user) {
     var profile = await window.FB.loadProfile(uid);
 
     if (!profile || !profile.activeLevel) {
-        // 처음 로그인 → Setup 화면 (splash 종료 후)
+        // 처음 로그인 → splash 종료 후 Setup 화면
+        var splash = document.getElementById('splash-screen');
+        var splashDone = !splash || splash.style.display === 'none';
         setTimeout(function() {
             showScreen('setup-screen');
-        }, 4000);
+        }, splashDone ? 0 : 4000);
         return;
     }
 
