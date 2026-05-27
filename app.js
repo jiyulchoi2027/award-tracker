@@ -616,7 +616,7 @@ function saveLog() {
     if (isNaN(hours) || hours <= 0) { alert('Please enter valid hours (0.5 – 8)!'); return; }
     if (hours > 8) { alert('Maximum 8 hours per day allowed!'); return; }
 
-    // B1 수정: startDate와 같은 날은 허용 (< 만 차단, <= 아님)
+    // startDate와 같은 날은 허용 (< 만 차단, <= 아님)
     let startDate = localStorage.getItem('startDate');
     if (startDate && date < startDate) {
         alert('Date cannot be before your start date (' + startDate + ')!');
@@ -630,6 +630,31 @@ function saveLog() {
     }
 
     let logs = goals[currentCategory][currentGoalIndex].activityTypes[currentActivityIndex].logs;
+
+    // 같은 날 모든 카테고리 합산 8시간 초과 차단 (공식 룰)
+    var dailyTotal = 0;
+    var allCats = ['Voluntary Public Service', 'Personal Development', 'Physical Fitness'];
+    allCats.forEach(function(cat) {
+        goals[cat].forEach(function(goal) {
+            goal.activityTypes.forEach(function(act) {
+                act.logs.forEach(function(log, idx) {
+                    if (log.date === date) {
+                        // 편집 중인 로그는 제외 (자기 자신)
+                        var isSelf = (cat === currentCategory &&
+                            goals[cat].indexOf(goals[cat][currentGoalIndex]) === goals[cat].indexOf(goal) &&
+                            goal.activityTypes.indexOf(act) === currentActivityIndex &&
+                            idx === editingLogIndex);
+                        if (!isSelf) dailyTotal += log.hours;
+                    }
+                });
+            });
+        });
+    });
+    if (dailyTotal + hours > 8) {
+        alert('Total hours for ' + date + ' would exceed 8 hours (' +
+            dailyTotal.toFixed(1) + ' hrs already logged across all sections). Please adjust.');
+        return;
+    }
 
     if (editingLogIndex >= 0) {
         // 수정 — 편집 시 알림 없음
@@ -664,8 +689,13 @@ function checkCompletion(category) {
     let total      = 0;
 
     if (sectionKey === 'exp') {
+        var prevDays = 0;
+        expTrips.forEach(function(t, i) {
+            if (i < expTrips.length - 1) prevDays += (t.countableDays || 0);
+        });
         expTrips.forEach(function(t) { total += (t.countableDays || 0); });
-        if (total === req.exp.days) {
+        // 처음 달성 순간만 알림
+        if (total >= req.exp.days && prevDays < req.exp.days) {
             setTimeout(function() {
                 alert('🎉 Congratulations! You completed Expedition & Exploration (' + req.exp.days + ' days)!');
             }, 300);
@@ -694,15 +724,22 @@ function checkCompletion(category) {
 
 function updateDisplay(category) {
     let totalHours = 0;
-    let months     = new Set();
+    var monthHours = {};  // 월별 시간 합산 (1시간 이상인 달만 카운트)
 
     goals[category].forEach(function(goal) {
         goal.activityTypes.forEach(function(act) {
             act.logs.forEach(function(log) {
                 totalHours += log.hours;
-                months.add(log.date.substring(0, 7));
+                var m = log.date.substring(0, 7);
+                monthHours[m] = (monthHours[m] || 0) + log.hours;
             });
         });
+    });
+
+    // 공식 룰: 해당 월에 1시간 이상 로그된 달만 카운트
+    var months = new Set();
+    Object.keys(monthHours).forEach(function(m) {
+        if (monthHours[m] >= 1) months.add(m);
     });
     let activeMonths = months.size;
 
@@ -1013,8 +1050,16 @@ function togglePriorAward(context) {
     lowers.forEach(function(lv) {
         var saved = priorAwards[lv] || {};
         var color = lv.includes('Bronze') ? '#cd7f32' : '#aaa';
+        var wrapperId = 'prior-wrapper-' + context + '-' + lv.replace(/\s/g,'_');
+        var btnId     = 'prior-btn-' + context + '-' + lv.replace(/\s/g,'_');
+        // 이미 저장된 값이 있으면 기본 열림
+        var hasData = Object.values(saved).some(function(v) { return v > 0; });
+
+        html += '<button type="button" class="prior-toggle-btn' + (hasData ? ' open' : '') + '" id="' + btnId + '" onclick="togglePriorBlock(\'' + wrapperId + '\',\'' + btnId + '\')">';
+        html += '✓ ' + escapeHtml(lv);
+        html += '<span class="prior-toggle-arrow">▼</span></button>';
+        html += '<div class="prior-inputs-wrapper' + (hasData ? ' open' : '') + '" id="' + wrapperId + '">';
         html += '<div class="prior-level-block" style="border-left:3px solid ' + color + '">';
-        html += '<p class="prior-level-title" style="color:' + color + '">✓ ' + escapeHtml(lv) + '</p>';
 
         if (lv.includes('Certificate') || lv.includes('Medal')) {
             var req = REQUIREMENTS[lv];
@@ -1036,7 +1081,8 @@ function togglePriorAward(context) {
             html += '<div class="prior-input-item"></div>';
             html += '</div>';
         }
-        html += '</div>';
+        html += '</div>'; // prior-level-block
+        html += '</div>'; // prior-inputs-wrapper
     });
 
     inputsEl.innerHTML = html;
@@ -1068,6 +1114,15 @@ function readPriorInputs(context) {
 }
 
 // priorAwards 저장
+function togglePriorBlock(wrapperId, btnId) {
+    var wrapper = document.getElementById(wrapperId);
+    var btn     = document.getElementById(btnId);
+    if (!wrapper || !btn) return;
+    var isOpen = wrapper.classList.contains('open');
+    wrapper.classList.toggle('open', !isOpen);
+    btn.classList.toggle('open', !isOpen);
+}
+
 function savePriorAwards(data) {
     priorAwards = data;
     localStorage.setItem('priorAwards', JSON.stringify(priorAwards));
@@ -1144,7 +1199,7 @@ function closeSettingsModal() {
     document.getElementById('settings-modal').style.display = 'none';
 }
 
-function saveSettings() {
+async function saveSettings() {
     let name      = document.getElementById('settings-name').value.trim();
     let level     = document.getElementById('settings-level').value;
     let startDate = document.getElementById('settings-startdate').value;
@@ -1153,7 +1208,6 @@ function saveSettings() {
     if (!level) { alert('Please select a level!');  return; }
     if (!startDate) { alert('Please select a start date!'); return; }
 
-    // B3 수정: selectedLevel 전역 변수 반드시 업데이트
     selectedLevel = level;
     localStorage.setItem('userName',      name);
     localStorage.setItem('selectedLevel', level);
@@ -1164,8 +1218,25 @@ function saveSettings() {
 
     document.getElementById('header-name').textContent = name + ' | ' + level;
 
+    // Firestore 프로필 동기화
+    var uid = window.FB && window.FB.getCurrentUid();
+    if (uid) {
+        try {
+            await window.FB.saveProfile(uid, {
+                name:        name,
+                activeLevel: level,
+                startDate:   startDate,
+                updatedAt:   new Date().toISOString()
+            });
+            await window.FB.saveLevelData(uid, level, 'priors', priorAwards);
+        } catch(e) {
+            console.warn('Settings Firestore sync failed:', e);
+        }
+    }
+
     CATS.forEach(function(c) { updateDisplay(c); });
     updateBadges(level);
+    renderExpedition();
     closeSettingsModal();
 }
 
@@ -1179,6 +1250,8 @@ function resetAllData() {
                 'Physical Fitness':         [],
                 'Expedition':               []
             };
+            expTrips    = [];
+            priorAwards = {};
             selectedLevel = '';
             document.getElementById('main-screen').style.display  = 'none';
             document.getElementById('setup-screen').style.display = 'flex';
@@ -1193,11 +1266,6 @@ function resetAllData() {
 // 페이지 로드
 // ════════════════════════════════════════════
 
-window.onload = function() {
-    // Firebase 연동 버전에서는 onAuthChange가 로그인 처리
-    // window.onload에서 localStorage 기반 자동 로그인 제거
-    // (firebase.js 로드 후 onAuthChange 콜백에서 처리)
-};
 // ════════════════════════════════════════════
 // Splash Screen
 // ════════════════════════════════════════════
@@ -1457,9 +1525,10 @@ async function loadUserData(user) {
     localStorage.setItem('selectedLevel', profile.activeLevel);
     localStorage.setItem('startDate',     profile.startDate || '');
 
-    // Firestore에서 goals, trips 로드
-    var savedGoals = await window.FB.loadLevelData(uid, levelName, 'goals');
-    var savedTrips = await window.FB.loadLevelData(uid, levelName, 'trips');
+    // Firestore에서 goals, trips, priors 로드
+    var savedGoals  = await window.FB.loadLevelData(uid, levelName, 'goals');
+    var savedTrips  = await window.FB.loadLevelData(uid, levelName, 'trips');
+    var savedPriors = await window.FB.loadLevelData(uid, levelName, 'priors');
 
     if (savedGoals) {
         goals = savedGoals;
@@ -1468,6 +1537,10 @@ async function loadUserData(user) {
     if (savedTrips) {
         expTrips = savedTrips;
         localStorage.setItem('expTrips', JSON.stringify(expTrips));
+    }
+    if (savedPriors) {
+        priorAwards = savedPriors;
+        localStorage.setItem('priorAwards', JSON.stringify(priorAwards));
     }
 
     // 메인 화면 표시
@@ -1494,8 +1567,9 @@ async function syncToFirestore() {
     var uid = window.FB.getCurrentUid();
     if (!uid || !selectedLevel) return;
     try {
-        await window.FB.saveLevelData(uid, selectedLevel, 'goals', goals);
-        await window.FB.saveLevelData(uid, selectedLevel, 'trips', expTrips);
+        await window.FB.saveLevelData(uid, selectedLevel, 'goals',  goals);
+        await window.FB.saveLevelData(uid, selectedLevel, 'trips',  expTrips);
+        await window.FB.saveLevelData(uid, selectedLevel, 'priors', priorAwards);
     } catch(e) {
         console.warn('Firestore sync failed (offline?):', e);
     }
@@ -1517,8 +1591,11 @@ startApp = async function() {
     localStorage.setItem('userName',      name);
     localStorage.setItem('startDate',     startDate);
 
+    // 이전 수상 기록 저장
+    savePriorAwards(readPriorInputs('setup'));
+
     // Firestore 프로필 저장
-    var uid = window.FB.getCurrentUid();
+    var uid = window.FB && window.FB.getCurrentUid();
     if (uid) {
         await window.FB.saveProfile(uid, {
             name:        name,
@@ -1526,16 +1603,21 @@ startApp = async function() {
             startDate:   startDate,
             updatedAt:   new Date().toISOString()
         });
-        await window.FB.saveLevelData(uid, level, 'goals', goals);
-        await window.FB.saveLevelData(uid, level, 'trips', expTrips);
+        await window.FB.saveLevelData(uid, level, 'goals',  goals);
+        await window.FB.saveLevelData(uid, level, 'trips',  expTrips);
+        await window.FB.saveLevelData(uid, level, 'priors', priorAwards);
     }
 
     document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('main-screen').style.display  = 'block';
     document.getElementById('header-name').textContent    = name + ' | ' + level;
+    var emailEl2 = document.getElementById('header-email');
+    if (emailEl2 && window.FB) emailEl2.textContent = (window.FB.auth.currentUser || {}).email || '';
 
-    CATS.forEach(function(c) { updateDisplay(c); });
+    CATS.forEach(function(c) { updateDisplay(c); renderGoals(c); });
     updateBadges(level);
+    renderExpedition();
+    showTab('vps');
 };
 
 // ── Auth 상태 감지 (firebase.js 로드 후) ──
