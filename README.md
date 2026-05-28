@@ -34,13 +34,12 @@ Helps students track progress in all four Congressional Award areas:
 - 🧭 **Award Compass splash screen** with animated compass needle
 - 📖 **In-app Quick Start Guide** with award requirements and usage tips
 - 🗂 **3-level activity structure**: Goal → Activity Type → Log
-- 📊 **Visual progress bars** with completion indicators and prior award tracking
+- 📊 **Visual progress bars** with completion indicators
 - 🎉 **Completion alert** when a section reaches 100%
 - 📅 **Program Start Date** — all logs validated against it
 - 🗺 **Expedition tab** — day-by-day log, travel days handling, nights auto-calculated
-- 📤 **CSV export** — all activity data including Expedition trips
+- 📤 **Per-section XLSX export** — formatted for Submittable submission
 - ⚙️ **Settings** — change name, level, or start date without losing data
-- ☁️ **Firebase sync** — data synced across devices via Firestore
 - 📱 **Mobile responsive** design
 - 🔒 **XSS protection** on all user inputs
 
@@ -51,17 +50,17 @@ Helps students track progress in all four Congressional Award areas:
 | Level | Public Service | Development | Fitness | Expedition |
 |-------|---------------|-------------|---------|------------|
 | Bronze Certificate | 30 hrs | 15 hrs | 15 hrs | 1 day |
-| Silver Certificate | 60 hrs | 30 hrs | 30 hrs | 2 days |
-| Gold Certificate | 90 hrs · 6 mo | 45 hrs · 6 mo | 45 hrs · 6 mo | 3 days |
+| Silver Certificate | 60 hrs | 30 hrs | 30 hrs | 2 days · 1 night |
+| Gold Certificate | 90 hrs · 6 mo | 45 hrs · 6 mo | 45 hrs · 6 mo | 2 days · 1 night |
 | Bronze Medal | 100 hrs · 7 mo | 50 hrs · 7 mo | 50 hrs · 7 mo | 2 days · 1 night |
 | Silver Medal | 200 hrs · 12 mo | 100 hrs · 12 mo | 100 hrs · 12 mo | 3 days · 2 nights |
 | Gold Medal | 400 hrs · 24 mo | 200 hrs · 24 mo | 200 hrs · 24 mo | 5 days · 4 nights |
 
 ---
 
-## Why I Built This
+## Taking It Further
 
-In April 2026, I contacted the Congressional Award Foundation directly to share this idea and ask for guidance. I also pre-registered for the 2026 Congressional App Challenge and wrote to my congressional representative requesting that GA-09 participate in the competition.
+Building the app was only the beginning. In April 2026, I contacted the Congressional Award Foundation directly to share this idea and ask for guidance. I also pre-registered for the 2026 Congressional App Challenge and wrote to my congressional representative requesting that GA-09 participate in the competition.
 
 I am currently a Silver Medal candidate and plan to pursue the Gold Medal before graduation.
 
@@ -88,8 +87,6 @@ I am currently a Silver Medal candidate and plan to pursue the Gold Medal before
 | v1.0 | May 2026 | 3-level structure (Goal → Activity Type → Log), settings modal, edit/delete all levels |
 | v1.1 | May 2026 | Tab navigation, Expedition day-by-day log, travel days handling, program start date, completion alert, XLSX export, Award Compass splash screen, in-app guide overlay |
 | v1.2 | May 2026 | XSS security fix, bug fixes (expedition activity modal, timezone date bug), mobile guide responsive, app renamed to Award Compass |
-| v1.4.1 | May 2026 | Requirements table fix, month counting rule, daily 8hr cap, expedition completion alert, reset data logout fix, Firestore sync improvements |
-| v1.5 | May 2026 | Add Activity modal fix (photo removed → Submittable notice), header start date, prior award cleanup, CSV expedition export, XSS fix for expedition fields, ESC/backdrop modal close, level migration on settings, safe JSON parse, auth error handling, floating point month fix |
 
 ---
 
