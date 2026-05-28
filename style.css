@@ -27,6 +27,8 @@ header h1 {
 header p {
     font-size: 13px;
     opacity: 0.8;
+    word-break: break-word;
+    line-height: 1.4;
 }
 
 /* 메인 컨테이너 */
@@ -606,6 +608,8 @@ header p {
 .goal-header-left {
     flex: 1;
     min-width: 0;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .goal-header-right {

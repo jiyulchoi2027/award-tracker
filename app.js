@@ -56,20 +56,32 @@ let currentGoalIndex    = -1;
 let currentActivityIndex= -1;
 let editingLogIndex     = -1;   // 수정 중인 log 인덱스 (-1 = 신규)
 
+// ── 안전한 JSON 파싱 (손상된 localStorage crash 방지) ──
+function safeJsonParse(key, fallback) {
+    try {
+        var raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+    } catch(e) {
+        console.warn('[Award Compass] localStorage parse error for "' + key + '" — reset to default:', e);
+        localStorage.removeItem(key);
+        return fallback;
+    }
+}
+
 // 이전 수상 기록 (수기 입력)
-let priorAwards = JSON.parse(localStorage.getItem('priorAwards') || '{}');
+let priorAwards = safeJsonParse('priorAwards', {});
 
 // ─── 데이터 구조 ───
 // goals[category] = [{
 //   name, validator, email,
 //   activityTypes: [{ name, logs: [{ date, hours, note }] }]
 // }]
-let goals = JSON.parse(localStorage.getItem('goals')) || {
+let goals = safeJsonParse('goals', {
     'Voluntary Public Service': [],
     'Personal Development':     [],
     'Physical Fitness':         [],
     'Expedition':               []
-};
+});
 
 // ─── 유틸 ───
 const CATS = ['Voluntary Public Service','Personal Development','Physical Fitness','Expedition'];
@@ -103,10 +115,10 @@ function today() {
 //   location, startDate, endDate,
 //   totalDays, travelDays, countableDays, nights(자동),
 //   validatorEmail,
-//   dayLogs: [{ date, isTravel, activities: [{startTime,endTime,hours,description,photo}] }]
+//   dayLogs: [{ date, isTravel, activities: [{startTime,endTime,hours,description}] }]
 // }]
 
-let expTrips       = JSON.parse(localStorage.getItem('expTrips')) || [];
+let expTrips       = safeJsonParse('expTrips', []);
 let currentTripIdx = -1;
 let currentDayIdx  = -1;
 let editingTripIdx = -1;
@@ -202,7 +214,7 @@ function saveTrip() {
     // dayLogs 생성 (첫날/마지막날 travel days면 isTravel=true)
     let dayLogs = [];
     for (let i = 0; i < totalDays; i++) {
-        let d = new Date(startDate);
+        let d = new Date(startDate + 'T12:00:00');
         d.setDate(d.getDate() + i);
         let dateStr  = d.getFullYear() + '-'
             + String(d.getMonth()+1).padStart(2,'0') + '-'
@@ -261,18 +273,10 @@ function openActivityModal(tripIdx, dayIdx, actIdx) {
         document.getElementById('act-start-time').value  = a.startTime   || '';
         document.getElementById('act-end-time').value    = a.endTime     || '';
         document.getElementById('act-description').value = a.description || '';
-        if (a.photo) {
-            document.getElementById('act-photo-preview').src          = a.photo;
-            document.getElementById('act-photo-preview').style.display = 'block';
-        } else {
-            document.getElementById('act-photo-preview').style.display = 'none';
-        }
     } else {
         document.getElementById('act-start-time').value  = '';
         document.getElementById('act-end-time').value    = '';
         document.getElementById('act-description').value = '';
-        document.getElementById('act-photo-preview').style.display = 'none';
-        document.getElementById('act-photo-input').value = '';
     }
     calcActivityHours();
     document.getElementById('act-modal').style.display = 'flex';
@@ -310,7 +314,6 @@ function saveActivity() {
     let startTime   = document.getElementById('act-start-time').value;
     let endTime     = document.getElementById('act-end-time').value;
     let description = document.getElementById('act-description').value.trim();
-    let photoFile   = document.getElementById('act-photo-input').files[0];
 
     if (!startTime)   { alert('Please enter start time!');      return; }
     if (!endTime)     { alert('Please enter end time!');        return; }
@@ -319,30 +322,32 @@ function saveActivity() {
     let hours = calcActivityHours();
     if (hours <= 0) { alert('End time must be after start time!'); return; }
 
-    function finishSave(photoData) {
-        let actData = { startTime, endTime, hours, description, photo: photoData };
-        let acts    = expTrips[currentTripIdx].dayLogs[currentDayIdx].activities;
-        if (editingActIdx >= 0) {
-            acts[editingActIdx] = actData;
-        } else {
-            acts.push(actData);
+    // 하루 8시간 합산 초과 차단 (공식 룰)
+    var actDate = expTrips[currentTripIdx] && expTrips[currentTripIdx].dayLogs[currentDayIdx]
+        ? expTrips[currentTripIdx].dayLogs[currentDayIdx].date : null;
+    if (actDate) {
+        var dayTotal = 0;
+        expTrips[currentTripIdx].dayLogs[currentDayIdx].activities.forEach(function(a, i) {
+            if (i !== editingActIdx) dayTotal += a.hours;
+        });
+        if (dayTotal + hours > 8) {
+            alert('Total hours for Day ' + (currentDayIdx+1) + ' would exceed 8 hours (' +
+                dayTotal.toFixed(1) + ' hrs already logged). Please adjust.');
+            return;
         }
-        saveExpTrips();
-        renderExpedition();
-        updateDisplay('Expedition');
-        closeActivityModal();
     }
 
-    if (photoFile) {
-        let reader = new FileReader();
-        reader.onload = function(e) { finishSave(e.target.result); };
-        reader.readAsDataURL(photoFile);
+    let actData = { startTime, endTime, hours, description };
+    let acts    = expTrips[currentTripIdx].dayLogs[currentDayIdx].activities;
+    if (editingActIdx >= 0) {
+        acts[editingActIdx] = actData;
     } else {
-        let existing = (editingActIdx >= 0)
-            ? expTrips[currentTripIdx].dayLogs[currentDayIdx].activities[editingActIdx].photo
-            : null;
-        finishSave(existing);
+        acts.push(actData);
     }
+    saveExpTrips();
+    renderExpedition();
+    updateDisplay('Expedition');
+    closeActivityModal();
 }
 
 function deleteActivity(tripIdx, dayIdx, actIdx) {
@@ -351,19 +356,6 @@ function deleteActivity(tripIdx, dayIdx, actIdx) {
         saveExpTrips();
         renderExpedition();
         updateDisplay('Expedition');
-    }
-}
-
-function previewActPhoto() {
-    let file = document.getElementById('act-photo-input').files[0];
-    if (file) {
-        let reader = new FileReader();
-        reader.onload = function(e) {
-            let prev = document.getElementById('act-photo-preview');
-            prev.src = e.target.result;
-            prev.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
     }
 }
 
@@ -393,15 +385,14 @@ function renderExpedition() {
                 activitiesHtml += `
                     <div class="exp-activity">
                         <div class="exp-act-header">
-                            <span class="exp-act-time">${act.startTime} – ${act.endTime}</span>
+                            <span class="exp-act-time">${escapeHtml(act.startTime)} – ${escapeHtml(act.endTime)}</span>
                             <span class="exp-act-hours">${act.hours} hrs</span>
                             <div class="exp-act-btns">
                                 <button class="icon-btn edit-btn" onclick="openActivityModal(${tIdx},${dIdx},${aIdx})">✏️</button>
                                 <button class="icon-btn delete-btn" onclick="deleteActivity(${tIdx},${dIdx},${aIdx})">🗑️</button>
                             </div>
                         </div>
-                        <p class="exp-act-desc">${act.description}</p>
-                        ${act.photo ? '<img src="'+act.photo+'" class="exp-act-photo">' : ''}
+                        <p class="exp-act-desc">${escapeHtml(act.description)}</p>
                     </div>`;
             });
 
@@ -741,10 +732,10 @@ function updateDisplay(category) {
         });
     });
 
-    // 공식 룰: 해당 월에 1시간 이상 로그된 달만 카운트
+    // 공식 룰: 해당 월에 1시간 이상 로그된 달만 카운트 (부동소수점 완화: 0.999)
     var months = new Set();
     Object.keys(monthHours).forEach(function(m) {
-        if (monthHours[m] >= 1) months.add(m);
+        if (monthHours[m] >= 0.999) months.add(m);
     });
     let activeMonths = months.size;
 
@@ -995,6 +986,18 @@ function updateBadges(level) {
 function exportCSV() {
     function f(val) { return '"' + String(val).replace(/"/g,'""') + '"'; }
 
+    // 데이터 존재 여부 확인
+    var hasData = expTrips.length > 0 ||
+        ['Voluntary Public Service','Personal Development','Physical Fitness'].some(function(cat) {
+            return goals[cat].some(function(g) {
+                return g.activityTypes.some(function(a) { return a.logs.length > 0; });
+            });
+        });
+    if (!hasData) {
+        alert('No activity data to export yet. Start logging activities first!');
+        return;
+    }
+
     // VPS / PD / PF logs
     let csv = 'Section,Goal,Activity Type,Date,Hours,Note\n';
     ['Voluntary Public Service','Personal Development','Physical Fitness'].forEach(function(cat) {
@@ -1094,19 +1097,33 @@ function togglePriorAward(context) {
             // Service
             html += '<div class="prior-input-item"><label>Service Hours (max ' + req.vps.hours + ')</label>';
             html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-vps" min="0" max="' + req.vps.hours + '" step="0.25" value="' + (saved.vps || 0) + '"></div>';
-            html += '<div class="prior-input-item"><label>Service Months (max ' + req.vps.months + ')</label>';
-            html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-vps-months" min="0" max="' + req.vps.months + '" step="1" value="' + (saved.vpsMonths || 0) + '"></div>';
+            if (req.vps.months > 0) {
+                html += '<div class="prior-input-item"><label>Service Months (max ' + req.vps.months + ')</label>';
+                html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-vps-months" min="0" max="' + req.vps.months + '" step="1" value="' + (saved.vpsMonths || 0) + '"></div>';
+            } else {
+                html += '<div class="prior-input-item"></div>';
+                html += '<input type="hidden" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-vps-months" value="0">';
+            }
             // Development
             html += '<div class="prior-input-item"><label>Development Hours (max ' + req.pd.hours + ')</label>';
             html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pd" min="0" max="' + req.pd.hours + '" step="0.25" value="' + (saved.pd || 0) + '"></div>';
-            html += '<div class="prior-input-item"><label>Development Months (max ' + req.pd.months + ')</label>';
-            html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pd-months" min="0" max="' + req.pd.months + '" step="1" value="' + (saved.pdMonths || 0) + '"></div>';
+            if (req.pd.months > 0) {
+                html += '<div class="prior-input-item"><label>Development Months (max ' + req.pd.months + ')</label>';
+                html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pd-months" min="0" max="' + req.pd.months + '" step="1" value="' + (saved.pdMonths || 0) + '"></div>';
+            } else {
+                html += '<div class="prior-input-item"></div>';
+                html += '<input type="hidden" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pd-months" value="0">';
+            }
             // Fitness
             html += '<div class="prior-input-item"><label>Fitness Hours (max ' + req.pf.hours + ')</label>';
             html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pf" min="0" max="' + req.pf.hours + '" step="0.25" value="' + (saved.pf || 0) + '"></div>';
-            html += '<div class="prior-input-item"><label>Fitness Months (max ' + req.pf.months + ')</label>';
-            html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pf-months" min="0" max="' + req.pf.months + '" step="1" value="' + (saved.pfMonths || 0) + '"></div>';
-            // Expedition 제거 (누적관리 불필요)
+            if (req.pf.months > 0) {
+                html += '<div class="prior-input-item"><label>Fitness Months (max ' + req.pf.months + ')</label>';
+                html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pf-months" min="0" max="' + req.pf.months + '" step="1" value="' + (saved.pfMonths || 0) + '"></div>';
+            } else {
+                html += '<div class="prior-input-item"></div>';
+                html += '<input type="hidden" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pf-months" value="0">';
+            }
             html += '</div>';
         }
         html += '</div>'; // prior-level-block
@@ -1203,7 +1220,7 @@ function startApp() {
     var emailEl2 = document.getElementById('header-email');
     if (emailEl2 && window.FB) emailEl2.textContent = (window.FB.auth.currentUser || {}).email || '';
 
-    CATS.forEach(function(c) { updateDisplay(c); });
+    CATS.forEach(function(c) { updateDisplay(c); renderGoals(c); });
     updateBadges(level);
     renderExpedition();
     showTab('vps'); // 항상 첫 탭으로 시작
@@ -1245,7 +1262,7 @@ async function saveSettings() {
 
     document.getElementById('header-name').textContent = name + ' | ' + level + ' | Since ' + startDate;
 
-    // Firestore 프로필 동기화
+    // Firestore 프로필 + goals/trips 동기화 (레벨 변경 시 마이그레이션)
     var uid = window.FB && window.FB.getCurrentUid();
     if (uid) {
         try {
@@ -1255,13 +1272,15 @@ async function saveSettings() {
                 startDate:   startDate,
                 updatedAt:   new Date().toISOString()
             });
+            await window.FB.saveLevelData(uid, level, 'goals',  goals);
+            await window.FB.saveLevelData(uid, level, 'trips',  expTrips);
             await window.FB.saveLevelData(uid, level, 'priors', priorAwards);
         } catch(e) {
             console.warn('Settings Firestore sync failed:', e);
         }
     }
 
-    CATS.forEach(function(c) { updateDisplay(c); });
+    CATS.forEach(function(c) { updateDisplay(c); renderGoals(c); });
     updateBadges(level);
     renderExpedition();
     closeSettingsModal();
@@ -1357,9 +1376,28 @@ function closeGuide() {
     document.body.style.overflow = '';
 }
 
-// ESC 키로 닫기
+// ESC 키로 열린 모달 모두 닫기
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeGuide();
+    if (e.key !== 'Escape') return;
+    if (document.getElementById('guide-overlay').style.display !== 'none') { closeGuide(); return; }
+    if (document.getElementById('act-modal').style.display     !== 'none') { closeActivityModal(); return; }
+    if (document.getElementById('log-modal').style.display     !== 'none') { closeLogModal(); return; }
+    if (document.getElementById('goal-modal').style.display    !== 'none') { closeGoalModal(); return; }
+    if (document.getElementById('act-type-modal').style.display !== 'none'){ closeActivityTypeModal(); return; }
+    if (document.getElementById('trip-modal').style.display    !== 'none') { closeTripModal(); return; }
+    if (document.getElementById('settings-modal').style.display !== 'none'){ closeSettingsModal(); return; }
+});
+
+// Backdrop(overlay) 클릭으로 모달 닫기
+document.addEventListener('click', function(e) {
+    if (!e.target.classList.contains('modal-overlay')) return;
+    var id = e.target.id;
+    if (id === 'goal-modal')     { closeGoalModal();         return; }
+    if (id === 'act-type-modal') { closeActivityTypeModal(); return; }
+    if (id === 'log-modal')      { closeLogModal();          return; }
+    if (id === 'trip-modal')     { closeTripModal();         return; }
+    if (id === 'act-modal')      { closeActivityModal();     return; }
+    if (id === 'settings-modal') { closeSettingsModal();     return; }
 });
 
 // ════════════════════════════════════════════
@@ -1401,6 +1439,7 @@ function showLoginForm() {
 
 function showLoginError(msg) {
     var el = document.getElementById('login-error');
+    el.style.color = '#c0392b';
     el.textContent = msg;
     el.style.display = 'block';
 }
@@ -1427,10 +1466,11 @@ async function handleEmailSignIn() {
         await loadUserData(user);
     } catch(e) {
         var msg = 'Sign in failed. Please check your email and password.';
-        if (e.code === 'auth/user-not-found')  msg = 'No account found with this email.';
-        if (e.code === 'auth/wrong-password')  msg = 'Incorrect password.';
-        if (e.code === 'auth/invalid-email')   msg = 'Invalid email address.';
-        if (e.code === 'auth/too-many-requests') msg = 'Too many attempts. Please try again later.';
+        if (e.code === 'auth/user-not-found')     msg = 'No account found with this email.';
+        if (e.code === 'auth/wrong-password')     msg = 'Incorrect password.';
+        if (e.code === 'auth/invalid-credential') msg = 'Incorrect email or password.';
+        if (e.code === 'auth/invalid-email')      msg = 'Invalid email address.';
+        if (e.code === 'auth/too-many-requests')  msg = 'Too many attempts. Please try again later.';
         showLoginError(msg);
     }
 }
@@ -1594,7 +1634,6 @@ async function syncToFirestore() {
 }
 
 // ── startApp 오버라이드: Setup 완료 시 Firestore에 저장 ──
-var _origStartApp = startApp;
 startApp = async function() {
     var name      = document.getElementById('setup-name').value.trim();
     var level     = document.getElementById('setup-level').value;
