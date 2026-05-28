@@ -124,7 +124,7 @@ function calcTripDays() {
     let travelDays = parseInt(document.getElementById('trip-travel-days').value) || 0;
 
     if (start && end && end >= start) {
-        let diff         = Math.round((new Date(end) - new Date(start)) / (1000*60*60*24));
+        let diff         = Math.round((new Date(end + 'T12:00:00') - new Date(start + 'T12:00:00')) / (1000*60*60*24));
         let totalDays    = diff + 1;
         let countable    = Math.max(totalDays - travelDays, 0);
         // nights 자동계산: countable days - 1
@@ -190,7 +190,7 @@ function saveTrip() {
         return;
     }
 
-    let diff         = Math.round((new Date(endDate) - new Date(startDate)) / (1000*60*60*24));
+    let diff         = Math.round((new Date(endDate + 'T12:00:00') - new Date(startDate + 'T12:00:00')) / (1000*60*60*24));
     let totalDays    = diff + 1;
     let countable    = Math.max(totalDays - travelDays, 0);
     let nights       = Math.max(countable - 1, 0);
@@ -290,12 +290,17 @@ function calcActivityHours() {
         let [sh,sm] = start.split(':').map(Number);
         let [eh,em] = end.split(':').map(Number);
         let mins = (eh*60+em) - (sh*60+sm);
-        if (mins > 0) {
-            let hrs = (mins/60).toFixed(1);
-            document.getElementById('act-hours-calc').textContent = hrs + ' hrs';
+        if (mins <= 0) {
+            document.getElementById('act-hours-calc').textContent = '⚠️ End time must be after start time';
             document.getElementById('act-hours-calc').style.display = 'block';
-            return parseFloat(hrs);
+            document.getElementById('act-hours-calc').style.color = '#c0392b';
+            return 0;
         }
+        let hrs = (mins/60).toFixed(1);
+        document.getElementById('act-hours-calc').textContent = hrs + ' hrs';
+        document.getElementById('act-hours-calc').style.display = 'block';
+        document.getElementById('act-hours-calc').style.color = '#1a3a6b';
+        return parseFloat(hrs);
     }
     document.getElementById('act-hours-calc').style.display = 'none';
     return 0;
@@ -405,9 +410,9 @@ function renderExpedition() {
                     <div class="exp-day-header" onclick="toggleExpDay('exp-day-body-${tIdx}-${dIdx}', this)">
                         <span class="exp-day-title">Day ${dIdx+1} — ${day.date} ${travelBadge}</span>
                         <span class="exp-day-hours">${dayHours > 0 ? dayHours+' hrs' : '—'}</span>
-                        <span class="exp-day-toggle">▼</span>
+                        <span class="exp-day-toggle">▲</span>
                     </div>
-                    <div class="exp-day-body" id="exp-day-body-${tIdx}-${dIdx}" style="display:none">
+                    <div class="exp-day-body" id="exp-day-body-${tIdx}-${dIdx}" style="display:block">
                         ${travelNote}
                         ${activitiesHtml || '<p class="no-logs">No activities yet.</p>'}
                         <button class="add-btn exp-add-act-btn" onclick="openActivityModal(${tIdx},${dIdx})">+ Add Activity</button>
@@ -857,13 +862,16 @@ function updateDisplay(category) {
 // ════════════════════════════════════════════
 
 function renderGoals(category) {
+    // Expedition은 Trip 구조 (renderExpedition 사용) — renderGoals 대상 아님
+    if (category === 'Expedition') return;
+
     const sectionIds = {
         'Voluntary Public Service': 'vps-goals',
         'Personal Development':     'pd-goals',
-        'Physical Fitness':         'pf-goals',
-        'Expedition':               'exp-goals'
+        'Physical Fitness':         'pf-goals'
     };
     let container = document.getElementById(sectionIds[category]);
+    if (!container) return;
     container.innerHTML = '';
 
     goals[category].forEach(function(goal, gIdx) {
@@ -887,11 +895,11 @@ function renderGoals(category) {
                 logsHtml += `
                     <div class="log-item">
                         <span class="log-date">${escapeHtml(log.date)}</span>
-                        <span class="log-hours">${escapeHtml(log.hours)} hrs</span>
+                        <span class="log-hours">${escapeHtml(String(log.hours))} hrs</span>
                         <span class="log-note">${escapeHtml(log.note || '')}</span>
                         <div class="log-actions">
-                            <button class="log-edit-btn" onclick="openLogModal('${escapeHtml(category)}',${gIdx},${aIdx},${lIdx})">✏️</button>
-                            <button class="log-del-btn"  onclick="deleteLog('${escapeHtml(category)}',${gIdx},${aIdx},${lIdx})">🗑️</button>
+                            <button class="log-edit-btn" onclick="openLogModal('${category}',${gIdx},${aIdx},${lIdx})">✏️</button>
+                            <button class="log-del-btn"  onclick="deleteLog('${category}',${gIdx},${aIdx},${lIdx})">🗑️</button>
                         </div>
                     </div>`;
             });
@@ -902,13 +910,13 @@ function renderGoals(category) {
                         <span class="act-type-name">📁 ${escapeHtml(act.name)}</span>
                         <span class="act-type-summary">${actHours} hrs / ${actSessions} sessions</span>
                         <div class="act-type-btns">
-                            <button class="log-btn"    onclick="openLogModal('${escapeHtml(category)}',${gIdx},${aIdx})">+ Log</button>
-                            <button class="toggle-btn" onclick="toggleLogs('logs-${escapeHtml(category)}-${gIdx}-${aIdx}')">▼ View</button>
-                            <button class="edit-btn"   onclick="openActivityTypeModal('${escapeHtml(category)}',${gIdx},${aIdx})">✏️</button>
-                            <button class="delete-btn" onclick="deleteActivityType('${escapeHtml(category)}',${gIdx},${aIdx})">🗑️</button>
+                            <button class="log-btn"    onclick="openLogModal('${category}',${gIdx},${aIdx})">+ Log</button>
+                            <button class="toggle-btn" onclick="toggleLogs('logs-${category}-${gIdx}-${aIdx}')">▼ View</button>
+                            <button class="edit-btn"   onclick="openActivityTypeModal('${category}',${gIdx},${aIdx})">✏️</button>
+                            <button class="delete-btn" onclick="deleteActivityType('${category}',${gIdx},${aIdx})">🗑️</button>
                         </div>
                     </div>
-                    <div class="logs-container" id="logs-${escapeHtml(category)}-${gIdx}-${aIdx}" style="display:none">
+                    <div class="logs-container" id="logs-${category}-${gIdx}-${aIdx}" style="display:none">
                         ${logsHtml || '<p class="no-logs">No logs yet. Click "+ Log" to add.</p>'}
                     </div>
                 </div>`;
@@ -924,13 +932,13 @@ function renderGoals(category) {
                 </div>
                 <div class="goal-header-right">
                     <span class="goal-total">${goalHours} hrs<br><small>${goalSessions} sessions</small></span>
-                    <button class="icon-btn edit-btn" onclick="openGoalModal('${escapeHtml(category)}',${gIdx})">✏️</button>
-                    <button class="icon-btn delete-btn" onclick="deleteGoal('${escapeHtml(category)}',${gIdx})">🗑️</button>
+                    <button class="icon-btn edit-btn" onclick="openGoalModal('${category}',${gIdx})">✏️</button>
+                    <button class="icon-btn delete-btn" onclick="deleteGoal('${category}',${gIdx})">🗑️</button>
                 </div>
             </div>
             ${actTypesHtml}
             <div class="goal-footer">
-                <button class="add-btn" onclick="openActivityTypeModal('${escapeHtml(category)}',${gIdx})">+ Add Activity Type</button>
+                <button class="add-btn" onclick="openActivityTypeModal('${category}',${gIdx})">+ Add Activity Type</button>
             </div>`;
         container.appendChild(div);
     });
@@ -987,8 +995,9 @@ function updateBadges(level) {
 function exportCSV() {
     function f(val) { return '"' + String(val).replace(/"/g,'""') + '"'; }
 
+    // VPS / PD / PF logs
     let csv = 'Section,Goal,Activity Type,Date,Hours,Note\n';
-    CATS.forEach(function(cat) {
+    ['Voluntary Public Service','Personal Development','Physical Fitness'].forEach(function(cat) {
         goals[cat].forEach(function(goal) {
             goal.activityTypes.forEach(function(act) {
                 act.logs.forEach(function(log) {
@@ -998,7 +1007,25 @@ function exportCSV() {
         });
     });
 
-    let blob = new Blob([csv], { type:'text/csv' });
+    // Expedition trips
+    csv += '\nExpedition/Exploration\n';
+    csv += 'Location,Start Date,End Date,Total Days,Countable Days,Nights,Travel Days,Validator Email\n';
+    expTrips.forEach(function(trip) {
+        csv += f(trip.location)+','+f(trip.startDate)+','+f(trip.endDate)+','+
+               f(trip.totalDays)+','+f(trip.countableDays)+','+f(trip.nights)+','+
+               f(trip.travelDays)+','+f(trip.validatorEmail||'')+'\n';
+
+        // Day activities
+        trip.dayLogs.forEach(function(day, dIdx) {
+            day.activities.forEach(function(act) {
+                csv += f('Day '+(dIdx+1)+' ('+day.date+(day.isTravel?' ✈️':'')+')') + ',' +
+                       f('') + ',' + f(act.startTime+' – '+act.endTime) + ',' +
+                       f(day.date) + ',' + f(act.hours) + ',' + f(act.description) + '\n';
+            });
+        });
+    });
+
+    let blob = new Blob(['\uFEFF'+csv], { type:'text/csv;charset=utf-8' });
     let url  = URL.createObjectURL(blob);
     let a    = document.createElement('a');
     a.href   = url;
@@ -1064,21 +1091,22 @@ function togglePriorAward(context) {
         if (lv.includes('Certificate') || lv.includes('Medal')) {
             var req = REQUIREMENTS[lv];
             html += '<div class="prior-inputs-grid">';
-            html += '<div class="prior-input-item"><label>VPS Hours (max ' + req.vps.hours + ')</label>';
+            // Service
+            html += '<div class="prior-input-item"><label>Service Hours (max ' + req.vps.hours + ')</label>';
             html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-vps" min="0" max="' + req.vps.hours + '" step="0.25" value="' + (saved.vps || 0) + '"></div>';
-            html += '<div class="prior-input-item"><label>VPS Months (max ' + req.vps.months + ')</label>';
+            html += '<div class="prior-input-item"><label>Service Months (max ' + req.vps.months + ')</label>';
             html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-vps-months" min="0" max="' + req.vps.months + '" step="1" value="' + (saved.vpsMonths || 0) + '"></div>';
-            html += '<div class="prior-input-item"><label>Personal Dev Hours (max ' + req.pd.hours + ')</label>';
+            // Development
+            html += '<div class="prior-input-item"><label>Development Hours (max ' + req.pd.hours + ')</label>';
             html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pd" min="0" max="' + req.pd.hours + '" step="0.25" value="' + (saved.pd || 0) + '"></div>';
-            html += '<div class="prior-input-item"><label>PD Months (max ' + req.pd.months + ')</label>';
+            html += '<div class="prior-input-item"><label>Development Months (max ' + req.pd.months + ')</label>';
             html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pd-months" min="0" max="' + req.pd.months + '" step="1" value="' + (saved.pdMonths || 0) + '"></div>';
-            html += '<div class="prior-input-item"><label>Physical Fitness Hours (max ' + req.pf.hours + ')</label>';
+            // Fitness
+            html += '<div class="prior-input-item"><label>Fitness Hours (max ' + req.pf.hours + ')</label>';
             html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pf" min="0" max="' + req.pf.hours + '" step="0.25" value="' + (saved.pf || 0) + '"></div>';
-            html += '<div class="prior-input-item"><label>PF Months (max ' + req.pf.months + ')</label>';
+            html += '<div class="prior-input-item"><label>Fitness Months (max ' + req.pf.months + ')</label>';
             html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pf-months" min="0" max="' + req.pf.months + '" step="1" value="' + (saved.pfMonths || 0) + '"></div>';
-            html += '<div class="prior-input-item"><label>Expedition (max ' + req.exp.days + ' days)</label>';
-            html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-exp" min="0" max="' + req.exp.days + '" step="1" value="' + (saved.exp || 0) + '"></div>';
-            html += '<div class="prior-input-item"></div>';
+            // Expedition 제거 (누적관리 불필요)
             html += '</div>';
         }
         html += '</div>'; // prior-level-block
@@ -1105,9 +1133,8 @@ function readPriorInputs(context) {
         var pdMonths   = parseInt(document.getElementById('prior-' + context + '-' + key + '-pd-months')?.value || 0);
         var pf         = parseFloat(document.getElementById('prior-' + context + '-' + key + '-pf')?.value  || 0);
         var pfMonths   = parseInt(document.getElementById('prior-' + context + '-' + key + '-pf-months')?.value || 0);
-        var exp        = parseFloat(document.getElementById('prior-' + context + '-' + key + '-exp')?.value || 0);
-        if (vps || pd || pf || exp) {
-            result[lv] = { vps, vpsMonths, pd, pdMonths, pf, pfMonths, exp };
+        if (vps || pd || pf) {
+            result[lv] = { vps, vpsMonths, pd, pdMonths, pf, pfMonths };
         }
     });
     return result;
@@ -1172,7 +1199,7 @@ function startApp() {
 
     document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('main-screen').style.display  = 'block';
-    document.getElementById('header-name').textContent    = name + ' | ' + level;
+    document.getElementById('header-name').textContent    = name + ' | ' + level + ' | Since ' + startDate;
     var emailEl2 = document.getElementById('header-email');
     if (emailEl2 && window.FB) emailEl2.textContent = (window.FB.auth.currentUser || {}).email || '';
 
@@ -1191,8 +1218,8 @@ function openSettingsModal() {
     document.getElementById('settings-level').value     = localStorage.getItem('selectedLevel') || '';
     document.getElementById('settings-startdate').value = localStorage.getItem('startDate')     || '';
     document.getElementById('settings-modal').style.display = 'flex';
-    // 이전 수상 기록 섹션 로드
-    togglePriorAward('settings');
+    // select value 설정 후 한 프레임 대기 후 prior 섹션 로드
+    setTimeout(function() { togglePriorAward('settings'); }, 0);
 }
 
 function closeSettingsModal() {
@@ -1216,7 +1243,7 @@ async function saveSettings() {
     // 이전 수상 기록 저장
     savePriorAwards(readPriorInputs('settings'));
 
-    document.getElementById('header-name').textContent = name + ' | ' + level;
+    document.getElementById('header-name').textContent = name + ' | ' + level + ' | Since ' + startDate;
 
     // Firestore 프로필 동기화
     var uid = window.FB && window.FB.getCurrentUid();
@@ -1240,24 +1267,16 @@ async function saveSettings() {
     closeSettingsModal();
 }
 
-function resetAllData() {
+async function resetAllData() {
     if (confirm('⚠️ This will permanently delete ALL your data.\n\nAre you sure?')) {
         if (confirm('Last warning — delete everything and start over?')) {
+            // Firebase 로그아웃 먼저
+            if (window.FB) {
+                try { await window.FB.signOutUser(); } catch(e) { console.warn('signOut error:', e); }
+            }
             localStorage.clear();
-            goals = {
-                'Voluntary Public Service': [],
-                'Personal Development':     [],
-                'Physical Fitness':         [],
-                'Expedition':               []
-            };
-            expTrips    = [];
-            priorAwards = {};
-            selectedLevel = '';
-            document.getElementById('main-screen').style.display  = 'none';
-            document.getElementById('setup-screen').style.display = 'flex';
-            document.getElementById('setup-name').value  = '';
-            document.getElementById('setup-level').value = '';
-            closeSettingsModal();
+            // 페이지 리로드로 완전 초기화 (로그인 화면으로 이동)
+            window.location.reload();
         }
     }
 }
@@ -1544,11 +1563,10 @@ async function loadUserData(user) {
     }
 
     // 메인 화면 표시
-    document.getElementById('login-screen').style.display  = 'none';
-    document.getElementById('setup-screen').style.display  = 'none';
-    document.getElementById('main-screen').style.display   = 'block';
-    document.getElementById('header-name').textContent     =
-        (profile.name || user.displayName) + ' | ' + profile.activeLevel;
+    showScreen('main-screen');
+    document.getElementById('header-name').textContent =
+        (profile.name || user.displayName) + ' | ' + profile.activeLevel +
+        (profile.startDate ? ' | Since ' + profile.startDate : '');
     var emailEl = document.getElementById('header-email');
     if (emailEl) emailEl.textContent = user.email || '';
 
@@ -1610,7 +1628,7 @@ startApp = async function() {
 
     document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('main-screen').style.display  = 'block';
-    document.getElementById('header-name').textContent    = name + ' | ' + level;
+    document.getElementById('header-name').textContent    = name + ' | ' + level + ' | Since ' + startDate;
     var emailEl2 = document.getElementById('header-email');
     if (emailEl2 && window.FB) emailEl2.textContent = (window.FB.auth.currentUser || {}).email || '';
 

@@ -101,7 +101,7 @@
 </div>
 
 <!-- ── Setup Screen ── -->
-<div id="setup-screen">
+<div id="setup-screen" style="display:none">
     <h1>Award Compass</h1>
     <p>Track your journey. Build your story. Own your future.</p>
     <div class="setup-card">
@@ -348,14 +348,15 @@
         <div class="modal">
             <h3 id="act-modal-title">Add Activity</h3>
             <label>Start Time</label>
-            <input type="time" id="act-start-time" class="input-field">
+            <input type="time" id="act-start-time" class="input-field" onchange="calcActivityHours()">
             <label>End Time</label>
-            <input type="time" id="act-end-time" class="input-field">
+            <input type="time" id="act-end-time" class="input-field" onchange="calcActivityHours()">
             <p class="modal-hint" id="act-hours-calc" style="display:none; color:#1a3a6b; font-weight:bold;"></p>
             <label>Description</label>
             <input type="text" id="act-description" class="input-field" placeholder="e.g. Hiking to the summit">
             <label>Photo <span style="font-weight:normal;color:#aaa;">(optional)</span></label>
-            <input type="file" id="act-photo-input" class="input-field" accept="image/*">
+            <input type="file" id="act-photo-input" class="input-field" accept="image/*" onchange="previewActPhoto()">
+            <img id="act-photo-preview" style="display:none; width:100%; max-height:160px; object-fit:cover; border-radius:8px; margin-top:6px;">
             <div class="modal-buttons">
                 <button class="save-btn" onclick="saveActivity()">Save</button>
                 <button class="cancel-btn" onclick="closeActivityModal()">Cancel</button>
@@ -436,11 +437,11 @@
                     <div class="g-arrow">›</div>
                     <div class="g-flow-step"><div class="g-num">3</div><div class="g-ftitle">Add Log</div><div class="g-fdesc">Date + Hours<br>+ Note</div></div>
                     <div class="g-arrow">›</div>
-                    <div class="g-flow-step g-flow-gold"><div class="g-num g-num-gold">4</div><div class="g-ftitle">📤 Export</div><div class="g-fdesc g-fdesc-gold">.xlsx for<br>Submittable</div></div>
+                    <div class="g-flow-step g-flow-gold"><div class="g-num g-num-gold">4</div><div class="g-ftitle">📤 Export</div><div class="g-fdesc g-fdesc-gold">.csv for<br>your records</div></div>
                 </div>
 
                 <div class="g-export-tip">
-                    📤 <strong>Export button</strong> is at the bottom of each section card. Downloads a .xlsx file ready for Submittable submission.
+                    📤 <strong>Export CSV button</strong> is in the header. Downloads a .csv file with all your activity logs including Expedition trips.
                 </div>
 
                 <div class="g-section-title">Award Level Requirements</div>

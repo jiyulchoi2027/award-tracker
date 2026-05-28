@@ -1413,7 +1413,7 @@ header p {
     padding: 6px 10px !important;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 360px) {
     .prior-inputs-grid { grid-template-columns: 1fr; }
 }
 
