@@ -250,6 +250,7 @@ function saveTrip() {
 
 function deleteTrip(idx) {
     if (confirm('Delete this trip and all daily logs?')) {
+        closeActivityModal(); // 열려있을 수 있는 activity 모달 먼저 닫기
         expTrips.splice(idx, 1);
         saveExpTrips();
         renderExpedition();
@@ -748,6 +749,7 @@ function updateDisplay(category) {
     let { bar: barId, text: textId, months: monthsId } = ids[category];
 
     let req        = REQUIREMENTS[selectedLevel];
+    if (!req) return;   // selectedLevel 미설정 시 crash 방지
     let sectionKey = CAT_KEYS[category];
 
     // ── 이전 수상 기록 (브론즈/실버 분리) ──
@@ -1190,7 +1192,8 @@ function getPriorByLevel() {
         var rec = entry[1];
         if (lv.includes('Bronze')) {
             ['vps','pd','pf','exp'].forEach(function(k) { bronze[k] += (rec[k]||0); });
-        } else if (lv.includes('Silver')) {
+        } else {
+            // Silver + Gold 모두 silver 버킷으로 합산 (진행률 바 표시용)
             ['vps','pd','pf','exp'].forEach(function(k) { silver[k] += (rec[k]||0); });
         }
     });
@@ -1620,17 +1623,31 @@ async function loadUserData(user) {
     }, 50);
 }
 
-// ── Firestore 저장 헬퍼 (goals, trips 변경 시 호출) ──
+// ── Toast 알림 (비차단 메시지) ──
+function showToast(msg, duration) {
+    var toast = document.getElementById('toast-msg');
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(function() { toast.classList.remove('show'); }, duration || 2500);
+}
+
+// ── Firestore 저장 헬퍼 (500ms 디바운스 — 연속 호출 병합) ──
+var _syncTimer = null;
 async function syncToFirestore() {
     var uid = window.FB.getCurrentUid();
     if (!uid || !selectedLevel) return;
-    try {
-        await window.FB.saveLevelData(uid, selectedLevel, 'goals',  goals);
-        await window.FB.saveLevelData(uid, selectedLevel, 'trips',  expTrips);
-        await window.FB.saveLevelData(uid, selectedLevel, 'priors', priorAwards);
-    } catch(e) {
-        console.warn('Firestore sync failed (offline?):', e);
-    }
+    clearTimeout(_syncTimer);
+    _syncTimer = setTimeout(async function() {
+        try {
+            await window.FB.saveLevelData(uid, selectedLevel, 'goals',  goals);
+            await window.FB.saveLevelData(uid, selectedLevel, 'trips',  expTrips);
+            await window.FB.saveLevelData(uid, selectedLevel, 'priors', priorAwards);
+        } catch(e) {
+            console.warn('Firestore sync failed (offline?):', e);
+            showToast('⚠️ Changes saved locally. Sync when back online.', 3000);
+        }
+    }, 500);
 }
 
 // ── startApp 오버라이드: Setup 완료 시 Firestore에 저장 ──

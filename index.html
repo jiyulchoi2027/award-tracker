@@ -255,11 +255,11 @@
         <div class="modal">
             <h3 id="goal-modal-title">Add Goal</h3>
             <label>Goal Name</label>
-            <input type="text" id="goal-name" class="input-field" placeholder="e.g. Library Volunteering">
+            <input type="text" id="goal-name" class="input-field" placeholder="e.g. Library Volunteering" maxlength="100">
             <label>Validator Name</label>
-            <input type="text" id="goal-validator" class="input-field" placeholder="e.g. Library Manager">
+            <input type="text" id="goal-validator" class="input-field" placeholder="e.g. Library Manager" maxlength="100">
             <label>Validator Email</label>
-            <input type="email" id="goal-validator-email" class="input-field" placeholder="validator@email.com">
+            <input type="email" id="goal-validator-email" class="input-field" placeholder="validator@email.com" maxlength="100">
             <div class="modal-buttons">
                 <button class="save-btn" onclick="saveGoal()">Save</button>
                 <button class="cancel-btn" onclick="closeGoalModal()">Cancel</button>
@@ -273,7 +273,7 @@
             <h3 id="act-type-modal-title">Add Activity Type</h3>
             <label>Activity Type Name</label>
             <input type="text" id="act-type-name" class="input-field"
-                   placeholder="e.g. Sorting books, Reading to kids">
+                   placeholder="e.g. Sorting books, Reading to kids" maxlength="100">
             <p class="modal-hint">This is a recurring activity you'll log multiple times.</p>
             <div class="modal-buttons">
                 <button class="save-btn" onclick="saveActivityType()">Save</button>
@@ -290,10 +290,10 @@
             <input type="date" id="log-date" class="input-field">
             <label>Hours (max 8)</label>
             <input type="number" id="log-hours" class="input-field"
-                   placeholder="e.g. 2.5" min="0.5" max="8" step="0.5">
+                   placeholder="e.g. 2.5" min="0.25" max="8" step="0.25">
             <label>Note <span style="font-weight:normal;color:#aaa;">(optional)</span></label>
             <input type="text" id="log-note" class="input-field"
-                   placeholder="e.g. Helped 15 seniors with meals">
+                   placeholder="e.g. Helped 15 seniors with meals" maxlength="300">
             <div class="modal-buttons">
                 <button class="save-btn" onclick="saveLog()">Save</button>
                 <button class="cancel-btn" onclick="closeLogModal()">Cancel</button>
@@ -404,7 +404,10 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+<!-- ── Toast 알림 ── -->
+<div id="toast-msg"></div>
+
+<script src="app.js"></script>
 
     <!-- ── Guide Overlay ── -->
     <div id="guide-overlay" style="display:none">
