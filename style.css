@@ -7,7 +7,7 @@
 
 body {
     font-family: 'Arial', sans-serif;
-    background-color: #f0f4f8;
+    background-color: #1a3a6b;  /* Splash와 동일한 네이비 — 흰 화면 방지 */
     color: #333;
 }
 
@@ -22,8 +22,6 @@ header {
 header h1 {
     font-size: 24px;
     margin-bottom: 5px;
-    color: #F5C842;          /* 골드 색상 */
-    letter-spacing: 0.5px;
 }
 
 header p {
@@ -1417,6 +1415,10 @@ header p {
 .prior-input {
     font-size: 13px !important;
     padding: 6px 10px !important;
+}
+
+@media (max-width: 360px) {
+    .prior-inputs-grid { grid-template-columns: 1fr; }
 }
 
 /* ══════════════════════════════════════════
