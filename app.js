@@ -1350,15 +1350,15 @@ async function resetAllData() {
         document.getElementById('dot3').classList.add('active');
     }, 2600);
 
-    // 4.2s: fade out (총 5초)
+    // 4.5s: fade out 시작 (콘텐츠 충분히 보임)
     setTimeout(function() {
         splash.classList.add('fade-out');
-    }, 4200);
+    }, 4500);
 
-    // 5.0s: data-done 표시
+    // 4.7s: data-done → 로그인 즉시 전환 (네이비 0.2초만)
     setTimeout(function() {
         splash.setAttribute('data-done', 'true');
-    }, 5000);
+    }, 4700);
 })();
 
 // ════════════════════════════════════════════
