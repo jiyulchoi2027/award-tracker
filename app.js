@@ -56,16 +56,6 @@ let currentGoalIndex    = -1;
 let currentActivityIndex= -1;
 let editingLogIndex     = -1;   // 수정 중인 log 인덱스 (-1 = 신규)
 
-// ── 헤더 표시 헬퍼 ──
-function setHeader(name, level, startDate, email) {
-    var nameEl  = document.getElementById('header-name');
-    var sinceEl = document.getElementById('header-since');
-    var emailEl = document.getElementById('header-email');
-    if (nameEl)  nameEl.textContent  = name + ' | ' + level;
-    if (sinceEl) sinceEl.textContent = startDate ? 'Since ' + startDate : '';
-    if (emailEl && email !== undefined) emailEl.textContent = email || '';
-}
-
 // ── 안전한 JSON 파싱 (손상된 localStorage crash 방지) ──
 function safeJsonParse(key, fallback) {
     try {
@@ -1226,7 +1216,9 @@ function startApp() {
 
     document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('main-screen').style.display  = 'block';
-    setHeader(name, level, startDate, window.FB && window.FB.auth.currentUser ? window.FB.auth.currentUser.email : '');
+    document.getElementById('header-name').textContent    = name + ' | ' + level + ' | Since ' + startDate;
+    var emailEl2 = document.getElementById('header-email');
+    if (emailEl2 && window.FB) emailEl2.textContent = (window.FB.auth.currentUser || {}).email || '';
 
     CATS.forEach(function(c) { updateDisplay(c); renderGoals(c); });
     updateBadges(level);
@@ -1268,7 +1260,7 @@ async function saveSettings() {
     // 이전 수상 기록 저장
     savePriorAwards(readPriorInputs('settings'));
 
-    setHeader(name, level, startDate);
+    document.getElementById('header-name').textContent = name + ' | ' + level + ' | Since ' + startDate;
 
     // Firestore 프로필 + goals/trips 동기화 (레벨 변경 시 마이그레이션)
     var uid = window.FB && window.FB.getCurrentUid();
@@ -1363,9 +1355,10 @@ async function resetAllData() {
         splash.classList.add('fade-out');
     }, 3200);
 
-    // 3.8s: 완전 제거
+    // 3.8s: 투명하게만 두고 display는 유지 (흰화면 방지)
+    // → showScreen 호출 시 실제 제거
     setTimeout(function() {
-        splash.style.display = 'none';
+        splash.setAttribute('data-done', 'true');
     }, 3800);
 })();
 
@@ -1417,9 +1410,16 @@ document.addEventListener('click', function(e) {
 
 // ── 화면 전환 헬퍼 ──
 function showScreen(screenId) {
+    // splash는 다른 화면으로 넘어갈 때만 제거 (흰 화면 방지)
     ['splash-screen','login-screen','setup-screen','main-screen'].forEach(function(id) {
         var el = document.getElementById(id);
-        if (el) el.style.display = 'none';
+        if (!el) return;
+        if (id === 'splash-screen') {
+            // splash는 다른 화면 전환 시 제거
+            if (screenId !== 'splash-screen') el.style.display = 'none';
+        } else {
+            el.style.display = 'none';
+        }
     });
     var target = document.getElementById(screenId);
     if (!target) return;
@@ -1576,7 +1576,7 @@ async function loadUserData(user) {
     if (!profile || !profile.activeLevel) {
         // 처음 로그인 → splash 종료 후 Setup 화면
         var splash = document.getElementById('splash-screen');
-        var splashDone = !splash || splash.style.display === 'none';
+        var splashDone = !splash || splash.getAttribute('data-done') === 'true';
         setTimeout(function() {
             showScreen('setup-screen');
         }, splashDone ? 0 : 4000);
@@ -1612,12 +1612,11 @@ async function loadUserData(user) {
 
     // 메인 화면 표시
     showScreen('main-screen');
-    setHeader(
-        profile.name || user.displayName,
-        profile.activeLevel,
-        profile.startDate,
-        user.email
-    );
+    document.getElementById('header-name').textContent =
+        (profile.name || user.displayName) + ' | ' + profile.activeLevel +
+        (profile.startDate ? ' | Since ' + profile.startDate : '');
+    var emailEl = document.getElementById('header-email');
+    if (emailEl) emailEl.textContent = user.email || '';
 
     // DOM 업데이트 후 render (한 프레임 대기)
     setTimeout(function() {
@@ -1676,7 +1675,9 @@ startApp = async function() {
 
     document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('main-screen').style.display  = 'block';
-    setHeader(name, level, startDate, window.FB && window.FB.auth.currentUser ? window.FB.auth.currentUser.email : '');
+    document.getElementById('header-name').textContent    = name + ' | ' + level + ' | Since ' + startDate;
+    var emailEl2 = document.getElementById('header-email');
+    if (emailEl2 && window.FB) emailEl2.textContent = (window.FB.auth.currentUser || {}).email || '';
 
     CATS.forEach(function(c) { updateDisplay(c); renderGoals(c); });
     updateBadges(level);
@@ -1715,7 +1716,7 @@ window.addEventListener('load', function() {
                 localStorage.removeItem('manualSignOut');
                 setTimeout(function() {
                     var splash = document.getElementById('splash-screen');
-                    if (!splash || splash.style.display === 'none') {
+                    if (!splash || splash.getAttribute('data-done') === 'true') {
                         showScreen('login-screen');
                     } else {
                         setTimeout(function() {
