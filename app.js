@@ -1350,16 +1350,15 @@ async function resetAllData() {
         document.getElementById('dot3').classList.add('active');
     }, 2600);
 
-    // 3.2s: fade out
+    // 4.2s: fade out (총 5초)
     setTimeout(function() {
         splash.classList.add('fade-out');
-    }, 3200);
+    }, 4200);
 
-    // 3.8s: 투명하게만 두고 display는 유지 (흰화면 방지)
-    // → showScreen 호출 시 실제 제거
+    // 5.0s: data-done 표시
     setTimeout(function() {
         splash.setAttribute('data-done', 'true');
-    }, 3800);
+    }, 5000);
 })();
 
 // ════════════════════════════════════════════
@@ -1410,16 +1409,9 @@ document.addEventListener('click', function(e) {
 
 // ── 화면 전환 헬퍼 ──
 function showScreen(screenId) {
-    // splash는 다른 화면으로 넘어갈 때만 제거 (흰 화면 방지)
     ['splash-screen','login-screen','setup-screen','main-screen'].forEach(function(id) {
         var el = document.getElementById(id);
-        if (!el) return;
-        if (id === 'splash-screen') {
-            // splash는 다른 화면 전환 시 제거
-            if (screenId !== 'splash-screen') el.style.display = 'none';
-        } else {
-            el.style.display = 'none';
-        }
+        if (el) el.style.display = 'none';
     });
     var target = document.getElementById(screenId);
     if (!target) return;
@@ -1579,7 +1571,7 @@ async function loadUserData(user) {
         var splashDone = !splash || splash.getAttribute('data-done') === 'true';
         setTimeout(function() {
             showScreen('setup-screen');
-        }, splashDone ? 0 : 4000);
+        }, splashDone ? 0 : 5000);
         return;
     }
 
@@ -1721,7 +1713,7 @@ window.addEventListener('load', function() {
                     } else {
                         setTimeout(function() {
                             showScreen('login-screen');
-                        }, 4000);
+                        }, 5000);
                     }
                 }, 100);
             }
