@@ -144,8 +144,9 @@
 
     <header>
         <h1>Award Compass</h1>
-        <p id="header-name" style="font-size:18px; font-weight:700; margin:4px 0;"></p>
-        <p id="header-email" style="font-size:12px; color:#9BBEDD; margin:0 0 8px;"></p>
+        <p id="header-name" style="font-size:17px; font-weight:700; margin:4px 0 0;"></p>
+        <p id="header-since" style="font-size:12px; color:#9BBEDD; margin:1px 0 2px; opacity:0.9;"></p>
+        <p id="header-email" style="font-size:11px; color:#9BBEDD; margin:0 0 8px;"></p>
         <div class="header-btns">
             <button class="header-btn" onclick="exportCSV()">📤 Export CSV</button>
             <button class="header-btn" onclick="openGuide()">📖 Guide</button>
@@ -255,11 +256,11 @@
         <div class="modal">
             <h3 id="goal-modal-title">Add Goal</h3>
             <label>Goal Name</label>
-            <input type="text" id="goal-name" class="input-field" placeholder="e.g. Library Volunteering" maxlength="100">
+            <input type="text" id="goal-name" class="input-field" placeholder="e.g. Library Volunteering">
             <label>Validator Name</label>
-            <input type="text" id="goal-validator" class="input-field" placeholder="e.g. Library Manager" maxlength="100">
+            <input type="text" id="goal-validator" class="input-field" placeholder="e.g. Library Manager">
             <label>Validator Email</label>
-            <input type="email" id="goal-validator-email" class="input-field" placeholder="validator@email.com" maxlength="100">
+            <input type="email" id="goal-validator-email" class="input-field" placeholder="validator@email.com">
             <div class="modal-buttons">
                 <button class="save-btn" onclick="saveGoal()">Save</button>
                 <button class="cancel-btn" onclick="closeGoalModal()">Cancel</button>
@@ -273,7 +274,7 @@
             <h3 id="act-type-modal-title">Add Activity Type</h3>
             <label>Activity Type Name</label>
             <input type="text" id="act-type-name" class="input-field"
-                   placeholder="e.g. Sorting books, Reading to kids" maxlength="100">
+                   placeholder="e.g. Sorting books, Reading to kids">
             <p class="modal-hint">This is a recurring activity you'll log multiple times.</p>
             <div class="modal-buttons">
                 <button class="save-btn" onclick="saveActivityType()">Save</button>
@@ -290,10 +291,10 @@
             <input type="date" id="log-date" class="input-field">
             <label>Hours (max 8)</label>
             <input type="number" id="log-hours" class="input-field"
-                   placeholder="e.g. 2.5" min="0.25" max="8" step="0.25">
+                   placeholder="e.g. 2.5" min="0.5" max="8" step="0.5">
             <label>Note <span style="font-weight:normal;color:#aaa;">(optional)</span></label>
             <input type="text" id="log-note" class="input-field"
-                   placeholder="e.g. Helped 15 seniors with meals" maxlength="300">
+                   placeholder="e.g. Helped 15 seniors with meals">
             <div class="modal-buttons">
                 <button class="save-btn" onclick="saveLog()">Save</button>
                 <button class="cancel-btn" onclick="closeLogModal()">Cancel</button>
@@ -404,10 +405,7 @@
         </div>
     </div>
 
-<!-- ── Toast 알림 ── -->
-<div id="toast-msg"></div>
-
-<script src="app.js"></script>
+    <script src="app.js"></script>
 
     <!-- ── Guide Overlay ── -->
     <div id="guide-overlay" style="display:none">

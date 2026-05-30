@@ -22,30 +22,8 @@ header {
 header h1 {
     font-size: 24px;
     margin-bottom: 5px;
-}
-
-/* ── Toast 알림 ── */
-#toast-msg {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: rgba(26,58,107,0.93);
-    color: #fff;
-    padding: 10px 20px;
-    border-radius: 20px;
-    font-size: 13px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s, transform 0.3s;
-    z-index: 99999;
-    white-space: nowrap;
-    max-width: 90vw;
-    text-align: center;
-}
-#toast-msg.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    color: #F5C842;          /* 골드 색상 */
+    letter-spacing: 0.5px;
 }
 
 header p {
@@ -1439,10 +1417,6 @@ header p {
 .prior-input {
     font-size: 13px !important;
     padding: 6px 10px !important;
-}
-
-@media (max-width: 360px) {
-    .prior-inputs-grid { grid-template-columns: 1fr; }
 }
 
 /* ══════════════════════════════════════════

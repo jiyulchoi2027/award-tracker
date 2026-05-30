@@ -56,6 +56,16 @@ let currentGoalIndex    = -1;
 let currentActivityIndex= -1;
 let editingLogIndex     = -1;   // 수정 중인 log 인덱스 (-1 = 신규)
 
+// ── 헤더 표시 헬퍼 ──
+function setHeader(name, level, startDate, email) {
+    var nameEl  = document.getElementById('header-name');
+    var sinceEl = document.getElementById('header-since');
+    var emailEl = document.getElementById('header-email');
+    if (nameEl)  nameEl.textContent  = name + ' | ' + level;
+    if (sinceEl) sinceEl.textContent = startDate ? 'Since ' + startDate : '';
+    if (emailEl && email !== undefined) emailEl.textContent = email || '';
+}
+
 // ── 안전한 JSON 파싱 (손상된 localStorage crash 방지) ──
 function safeJsonParse(key, fallback) {
     try {
@@ -250,7 +260,6 @@ function saveTrip() {
 
 function deleteTrip(idx) {
     if (confirm('Delete this trip and all daily logs?')) {
-        closeActivityModal(); // 열려있을 수 있는 activity 모달 먼저 닫기
         expTrips.splice(idx, 1);
         saveExpTrips();
         renderExpedition();
@@ -749,7 +758,6 @@ function updateDisplay(category) {
     let { bar: barId, text: textId, months: monthsId } = ids[category];
 
     let req        = REQUIREMENTS[selectedLevel];
-    if (!req) return;   // selectedLevel 미설정 시 crash 방지
     let sectionKey = CAT_KEYS[category];
 
     // ── 이전 수상 기록 (브론즈/실버 분리) ──
@@ -1192,8 +1200,7 @@ function getPriorByLevel() {
         var rec = entry[1];
         if (lv.includes('Bronze')) {
             ['vps','pd','pf','exp'].forEach(function(k) { bronze[k] += (rec[k]||0); });
-        } else {
-            // Silver + Gold 모두 silver 버킷으로 합산 (진행률 바 표시용)
+        } else if (lv.includes('Silver')) {
             ['vps','pd','pf','exp'].forEach(function(k) { silver[k] += (rec[k]||0); });
         }
     });
@@ -1219,9 +1226,7 @@ function startApp() {
 
     document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('main-screen').style.display  = 'block';
-    document.getElementById('header-name').textContent    = name + ' | ' + level + ' | Since ' + startDate;
-    var emailEl2 = document.getElementById('header-email');
-    if (emailEl2 && window.FB) emailEl2.textContent = (window.FB.auth.currentUser || {}).email || '';
+    setHeader(name, level, startDate, window.FB && window.FB.auth.currentUser ? window.FB.auth.currentUser.email : '');
 
     CATS.forEach(function(c) { updateDisplay(c); renderGoals(c); });
     updateBadges(level);
@@ -1263,7 +1268,7 @@ async function saveSettings() {
     // 이전 수상 기록 저장
     savePriorAwards(readPriorInputs('settings'));
 
-    document.getElementById('header-name').textContent = name + ' | ' + level + ' | Since ' + startDate;
+    setHeader(name, level, startDate);
 
     // Firestore 프로필 + goals/trips 동기화 (레벨 변경 시 마이그레이션)
     var uid = window.FB && window.FB.getCurrentUid();
@@ -1607,11 +1612,12 @@ async function loadUserData(user) {
 
     // 메인 화면 표시
     showScreen('main-screen');
-    document.getElementById('header-name').textContent =
-        (profile.name || user.displayName) + ' | ' + profile.activeLevel +
-        (profile.startDate ? ' | Since ' + profile.startDate : '');
-    var emailEl = document.getElementById('header-email');
-    if (emailEl) emailEl.textContent = user.email || '';
+    setHeader(
+        profile.name || user.displayName,
+        profile.activeLevel,
+        profile.startDate,
+        user.email
+    );
 
     // DOM 업데이트 후 render (한 프레임 대기)
     setTimeout(function() {
@@ -1623,31 +1629,17 @@ async function loadUserData(user) {
     }, 50);
 }
 
-// ── Toast 알림 (비차단 메시지) ──
-function showToast(msg, duration) {
-    var toast = document.getElementById('toast-msg');
-    if (!toast) return;
-    toast.textContent = msg;
-    toast.classList.add('show');
-    setTimeout(function() { toast.classList.remove('show'); }, duration || 2500);
-}
-
-// ── Firestore 저장 헬퍼 (500ms 디바운스 — 연속 호출 병합) ──
-var _syncTimer = null;
+// ── Firestore 저장 헬퍼 (goals, trips 변경 시 호출) ──
 async function syncToFirestore() {
     var uid = window.FB.getCurrentUid();
     if (!uid || !selectedLevel) return;
-    clearTimeout(_syncTimer);
-    _syncTimer = setTimeout(async function() {
-        try {
-            await window.FB.saveLevelData(uid, selectedLevel, 'goals',  goals);
-            await window.FB.saveLevelData(uid, selectedLevel, 'trips',  expTrips);
-            await window.FB.saveLevelData(uid, selectedLevel, 'priors', priorAwards);
-        } catch(e) {
-            console.warn('Firestore sync failed (offline?):', e);
-            showToast('⚠️ Changes saved locally. Sync when back online.', 3000);
-        }
-    }, 500);
+    try {
+        await window.FB.saveLevelData(uid, selectedLevel, 'goals',  goals);
+        await window.FB.saveLevelData(uid, selectedLevel, 'trips',  expTrips);
+        await window.FB.saveLevelData(uid, selectedLevel, 'priors', priorAwards);
+    } catch(e) {
+        console.warn('Firestore sync failed (offline?):', e);
+    }
 }
 
 // ── startApp 오버라이드: Setup 완료 시 Firestore에 저장 ──
@@ -1684,9 +1676,7 @@ startApp = async function() {
 
     document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('main-screen').style.display  = 'block';
-    document.getElementById('header-name').textContent    = name + ' | ' + level + ' | Since ' + startDate;
-    var emailEl2 = document.getElementById('header-email');
-    if (emailEl2 && window.FB) emailEl2.textContent = (window.FB.auth.currentUser || {}).email || '';
+    setHeader(name, level, startDate, window.FB && window.FB.auth.currentUser ? window.FB.auth.currentUser.email : '');
 
     CATS.forEach(function(c) { updateDisplay(c); renderGoals(c); });
     updateBadges(level);
