@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Award Compass</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="/award-tracker/manifest.json">
+    <meta name="theme-color" content="#1A3A6B">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Award Compass">
+    <link rel="apple-touch-icon" href="/award-tracker/icons/icon-192.png">
+
     <link rel="stylesheet" href="style.css">
     <script type="module" src="firebase.js"></script>
 </head>
@@ -477,5 +487,17 @@
         </div>
     </div>
 </div>
+
+<!-- Service Worker 등록 -->
+<script>
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/award-tracker/service-worker.js')
+            .then(function() { console.log('SW registered'); })
+            .catch(function(e) { console.warn('SW failed:', e); });
+    });
+}
+</script>
+
 </body>
 </html>
