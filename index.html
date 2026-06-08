@@ -15,7 +15,67 @@
     <link rel="apple-touch-icon" href="/award-tracker/icons/icon-192.png">
 
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* ── Daniel 피드백 수정 스타일 ── */
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 8px 0;
+        }
+        .checkbox-input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #1A3A6B;
+        }
+        .checkbox-label {
+            font-size: 0.9rem;
+            color: #2d3748;
+            cursor: pointer;
+            margin: 0;
+        }
+        .modal-hint-inline {
+            font-size: 0.78rem;
+            color: #718096;
+        }
+        .optional-label {
+            font-size: 0.78rem;
+            color: #718096;
+            font-weight: normal;
+        }
+        .log-indirect-badge {
+            display: inline-block;
+            background: #e8f0fe;
+            color: #1a3a6b;
+            font-size: 0.7rem;
+            padding: 1px 6px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .goal-nonprofit-meta {
+            font-size: 0.8rem;
+            color: #2d7a2d;
+            margin: 2px 0 0 0;
+        }
+        .goal-nonprofit-meta a {
+            color: #2d7a2d;
+            word-break: break-all;
+        }
+        .indirect-warn {
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: #f7fafc;
+            margin-top: 4px;
+        }
+    </style>
+
     <script type="module" src="firebase.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -271,6 +331,14 @@
             <input type="text" id="goal-validator" class="input-field" placeholder="e.g. Library Manager">
             <label>Validator Email</label>
             <input type="email" id="goal-validator-email" class="input-field" placeholder="validator@email.com">
+            <div id="goal-nonprofit-row" style="display:none">
+                <div class="checkbox-row">
+                    <input type="checkbox" id="goal-nonprofit" class="checkbox-input">
+                    <label for="goal-nonprofit" class="checkbox-label">501(c)(3) Registered Nonprofit</label>
+                </div>
+                <label>Organization URL <span class="optional-label">(optional)</span></label>
+                <input type="url" id="goal-org-url" class="input-field" placeholder="https://organization-website.org">
+            </div>
             <div class="modal-buttons">
                 <button class="save-btn" onclick="saveGoal()">Save</button>
                 <button class="cancel-btn" onclick="closeGoalModal()">Cancel</button>
@@ -303,6 +371,11 @@
             <input type="number" id="log-hours" class="input-field"
                    placeholder="e.g. 2.5" min="0.5" max="8" step="0.5">
             <label>Note <span style="font-weight:normal;color:#aaa;">(optional)</span></label>
+            <div id="log-indirect-row" class="checkbox-row" style="display:none">
+                <input type="checkbox" id="log-indirect" class="checkbox-input">
+                <label for="log-indirect" class="checkbox-label">Indirect Service Hours</label>
+                <span class="modal-hint-inline">(max 25% of total)</span>
+            </div>
             <input type="text" id="log-note" class="input-field"
                    placeholder="e.g. Helped 15 seniors with meals">
             <div class="modal-buttons">

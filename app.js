@@ -460,12 +460,25 @@ function openGoalModal(category, editIndex) {
         document.getElementById('goal-name').value            = g.name;
         document.getElementById('goal-validator').value       = g.validator || '';
         document.getElementById('goal-validator-email').value = g.email    || '';
+        var npCb = document.getElementById('goal-nonprofit');
+        if (npCb) npCb.checked = !!g.isNonProfit;
+        var npUrl = document.getElementById('goal-org-url');
+        if (npUrl) npUrl.value = g.orgUrl || '';
     } else {
         // 신규 모드
         document.getElementById('goal-modal-title').textContent = 'Add Goal — ' + category;
         document.getElementById('goal-name').value            = '';
         document.getElementById('goal-validator').value       = '';
         document.getElementById('goal-validator-email').value = '';
+        var npCb = document.getElementById('goal-nonprofit');
+        if (npCb) npCb.checked = false;
+        var npUrl = document.getElementById('goal-org-url');
+        if (npUrl) npUrl.value = '';
+    }
+    // VPS일 때만 501(c)(3) 필드 표시
+    var nonprofitRow = document.getElementById('goal-nonprofit-row');
+    if (nonprofitRow) {
+        nonprofitRow.style.display = (category === 'Voluntary Public Service') ? 'block' : 'none';
     }
     document.getElementById('goal-modal').style.display = 'flex';
 }
@@ -479,6 +492,8 @@ function saveGoal() {
     let name      = document.getElementById('goal-name').value.trim();
     let validator = document.getElementById('goal-validator').value.trim();
     let email     = document.getElementById('goal-validator-email').value.trim();
+    let isNonProfit = !!(document.getElementById('goal-nonprofit') && document.getElementById('goal-nonprofit').checked);
+    let orgUrl    = (document.getElementById('goal-org-url') && document.getElementById('goal-org-url').value.trim()) || '';
 
     if (!name) { alert('Please enter a goal name!'); return; }
 
@@ -487,6 +502,8 @@ function saveGoal() {
         goals[currentCategory][currentGoalIndex].name      = name;
         goals[currentCategory][currentGoalIndex].validator = validator;
         goals[currentCategory][currentGoalIndex].email     = email;
+        goals[currentCategory][currentGoalIndex].isNonProfit = isNonProfit;
+        goals[currentCategory][currentGoalIndex].orgUrl    = orgUrl;
     } else {
         // 신규 — 개수 제한 체크
         const maxGoals = { 'Voluntary Public Service':4, 'Personal Development':2, 'Physical Fitness':2, 'Expedition':1 };
@@ -495,7 +512,7 @@ function saveGoal() {
             closeGoalModal();
             return;
         }
-        goals[currentCategory].push({ name, validator, email, activityTypes: [] });
+        goals[currentCategory].push({ name, validator, email, isNonProfit, orgUrl, activityTypes: [] });
     }
 
     save();
@@ -584,6 +601,8 @@ function openLogModal(category, goalIndex, actIndex, editLogIdx) {
         document.getElementById('log-date').value  = log.date;
         document.getElementById('log-hours').value = log.hours;
         document.getElementById('log-note').value  = log.note || '';
+        var indirectCb = document.getElementById('log-indirect');
+        if (indirectCb) indirectCb.checked = !!log.isIndirect;
     } else {
         // 신규 모드
         let actName = goals[category][goalIndex].activityTypes[actIndex].name;
@@ -591,6 +610,13 @@ function openLogModal(category, goalIndex, actIndex, editLogIdx) {
         document.getElementById('log-date').value  = '';
         document.getElementById('log-hours').value = '';
         document.getElementById('log-note').value  = '';
+        var indirectCb = document.getElementById('log-indirect');
+        if (indirectCb) indirectCb.checked = false;
+    }
+    // VPS일 때만 간접봉사 체크박스 표시
+    var indirectRow = document.getElementById('log-indirect-row');
+    if (indirectRow) {
+        indirectRow.style.display = (category === 'Voluntary Public Service') ? 'flex' : 'none';
     }
     document.getElementById('log-modal').style.display = 'flex';
 }
@@ -652,12 +678,15 @@ function saveLog() {
         return;
     }
 
+    let isIndirect = (currentCategory === 'Voluntary Public Service') &&
+        !!(document.getElementById('log-indirect') && document.getElementById('log-indirect').checked);
+
     if (editingLogIndex >= 0) {
         // 수정 — 편집 시 알림 없음
-        logs[editingLogIndex] = { date, hours, note };
+        logs[editingLogIndex] = { date, hours, note, isIndirect };
     } else {
         // 신규
-        logs.push({ date, hours, note });
+        logs.push({ date, hours, note, isIndirect });
         checkCompletion(currentCategory);
     }
 
@@ -722,15 +751,34 @@ function updateDisplay(category) {
     let totalHours = 0;
     var monthHours = {};  // 월별 시간 합산 (1시간 이상인 달만 카운트)
 
+    var indirectHours = 0;
     goals[category].forEach(function(goal) {
         goal.activityTypes.forEach(function(act) {
             act.logs.forEach(function(log) {
                 totalHours += log.hours;
+                if (log.isIndirect) indirectHours += log.hours;
                 var m = log.date.substring(0, 7);
                 monthHours[m] = (monthHours[m] || 0) + log.hours;
             });
         });
     });
+
+    // VPS 간접봉사 25% 제한 경고 표시
+    if (category === 'Voluntary Public Service') {
+        var indirectWarn = document.getElementById('vps-indirect-warn');
+        if (indirectWarn) {
+            var maxIndirect = totalHours * 0.25;
+            if (indirectHours > 0) {
+                var pct = totalHours > 0 ? Math.round((indirectHours / totalHours) * 100) : 0;
+                indirectWarn.textContent = 'Indirect: ' + indirectHours.toFixed(1) + ' hrs (' + pct + '% of total)' +
+                    (indirectHours > maxIndirect ? ' ⚠️ Exceeds 25% limit!' : ' ✓');
+                indirectWarn.style.color = indirectHours > maxIndirect ? '#e53e3e' : '#2d7a2d';
+                indirectWarn.style.display = 'block';
+            } else {
+                indirectWarn.style.display = 'none';
+            }
+        }
+    }
 
     // 공식 룰: 해당 월에 1시간 이상 로그된 달만 카운트 (부동소수점 완화: 0.999)
     var months = new Set();
@@ -887,6 +935,7 @@ function renderGoals(category) {
                     <div class="log-item">
                         <span class="log-date">${escapeHtml(log.date)}</span>
                         <span class="log-hours">${escapeHtml(String(log.hours))} hrs</span>
+                        ${log.isIndirect ? '<span class="log-indirect-badge">indirect</span>' : ''}
                         <span class="log-note">${escapeHtml(log.note || '')}</span>
                         <div class="log-actions">
                             <button class="log-edit-btn" onclick="openLogModal('${category}',${gIdx},${aIdx},${lIdx})">✏️</button>
@@ -920,6 +969,7 @@ function renderGoals(category) {
                 <div class="goal-header-left">
                     <p class="goal-title">📌 ${escapeHtml(goal.name)}</p>
                     <p class="goal-meta">Validator: ${escapeHtml(goal.validator || 'Not set')}&nbsp;|&nbsp;${escapeHtml(goal.email || '—')}</p>
+                    ${goal.isNonProfit ? `<p class="goal-nonprofit-meta">🏛️ 501(c)(3) Nonprofit${goal.orgUrl ? ' — <a href="'+escapeHtml(goal.orgUrl)+'" target="_blank" rel="noopener">'+escapeHtml(goal.orgUrl)+'</a>' : ''}</p>` : ''}
                 </div>
                 <div class="goal-header-right">
                     <span class="goal-total">${goalHours} hrs<br><small>${goalSessions} sessions</small></span>
@@ -980,12 +1030,10 @@ function updateBadges(level) {
 }
 
 // ════════════════════════════════════════════
-// CSV 내보내기
+// XLSX 내보내기 (4개 시트)
 // ════════════════════════════════════════════
 
 function exportCSV() {
-    function f(val) { return '"' + String(val).replace(/"/g,'""') + '"'; }
-
     // 데이터 존재 여부 확인
     var hasData = expTrips.length > 0 ||
         ['Voluntary Public Service','Personal Development','Physical Fitness'].some(function(cat) {
@@ -998,45 +1046,76 @@ function exportCSV() {
         return;
     }
 
-    // VPS / PD / PF logs
-    let csv = 'Section,Goal,Activity Type,Date,Hours,Note\n';
-    ['Voluntary Public Service','Personal Development','Physical Fitness'].forEach(function(cat) {
-        goals[cat].forEach(function(goal) {
-            goal.activityTypes.forEach(function(act) {
-                act.logs.forEach(function(log) {
-                    csv += f(cat)+','+f(goal.name)+','+f(act.name)+','+f(log.date)+','+f(log.hours)+','+f(log.note||'')+'\n';
-                });
+    if (typeof XLSX === 'undefined') {
+        alert('Export library not loaded. Please refresh the page and try again.');
+        return;
+    }
+
+    var wb = XLSX.utils.book_new();
+    var userName = localStorage.getItem('userName') || 'export';
+
+    // ── Sheet 1: Voluntary Public Service ──
+    var vpsRows = [['Goal','501(c)(3)','Org URL','Activity Type','Date','Hours','Indirect','Note']];
+    goals['Voluntary Public Service'].forEach(function(goal) {
+        goal.activityTypes.forEach(function(act) {
+            act.logs.forEach(function(log) {
+                vpsRows.push([
+                    goal.name,
+                    goal.isNonProfit ? 'Yes' : 'No',
+                    goal.orgUrl || '',
+                    act.name, log.date,
+                    log.hours,
+                    log.isIndirect ? 'Yes' : 'No',
+                    log.note || ''
+                ]);
             });
         });
     });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(vpsRows), 'Voluntary Public Service');
 
-    // Expedition trips
-    csv += '\nExpedition/Exploration\n';
-    csv += 'Location,Start Date,End Date,Total Days,Countable Days,Nights,Travel Days,Validator Email\n';
+    // ── Sheet 2: Personal Development ──
+    var pdRows = [['Goal','Activity Type','Date','Hours','Note']];
+    goals['Personal Development'].forEach(function(goal) {
+        goal.activityTypes.forEach(function(act) {
+            act.logs.forEach(function(log) {
+                pdRows.push([goal.name, act.name, log.date, log.hours, log.note || '']);
+            });
+        });
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(pdRows), 'Personal Development');
+
+    // ── Sheet 3: Physical Fitness ──
+    var pfRows = [['Goal','Activity Type','Date','Hours','Note']];
+    goals['Physical Fitness'].forEach(function(goal) {
+        goal.activityTypes.forEach(function(act) {
+            act.logs.forEach(function(log) {
+                pfRows.push([goal.name, act.name, log.date, log.hours, log.note || '']);
+            });
+        });
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(pfRows), 'Physical Fitness');
+
+    // ── Sheet 4: Expedition ──
+    var expRows = [['Location','Start Date','End Date','Total Days','Countable Days','Nights','Travel Days','Validator Email']];
     expTrips.forEach(function(trip) {
-        csv += f(trip.location)+','+f(trip.startDate)+','+f(trip.endDate)+','+
-               f(trip.totalDays)+','+f(trip.countableDays)+','+f(trip.nights)+','+
-               f(trip.travelDays)+','+f(trip.validatorEmail||'')+'\n';
-
-        // Day activities
+        expRows.push([
+            trip.location, trip.startDate, trip.endDate,
+            trip.totalDays, trip.countableDays, trip.nights,
+            trip.travelDays, trip.validatorEmail || ''
+        ]);
         trip.dayLogs.forEach(function(day, dIdx) {
             day.activities.forEach(function(act) {
-                csv += f('Day '+(dIdx+1)+' ('+day.date+(day.isTravel?' ✈️':'')+')') + ',' +
-                       f('') + ',' + f(act.startTime+' – '+act.endTime) + ',' +
-                       f(day.date) + ',' + f(act.hours) + ',' + f(act.description) + '\n';
+                expRows.push([
+                    'Day '+(dIdx+1)+' ('+day.date+(day.isTravel?' ✈️':'')+')',
+                    '', '', '', '', '', '',
+                    act.startTime+' – '+act.endTime+' | '+act.description+' ('+act.hours+'h)'
+                ]);
             });
         });
     });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(expRows), 'Expedition');
 
-    let blob = new Blob(['\uFEFF'+csv], { type:'text/csv;charset=utf-8' });
-    let url  = URL.createObjectURL(blob);
-    let a    = document.createElement('a');
-    a.href   = url;
-    a.download = 'congressional-award-' + (localStorage.getItem('userName') || 'export') + '.csv';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    XLSX.writeFile(wb, 'congressional-award-' + userName + '.xlsx');
 }
 
 // ════════════════════════════════════════════
@@ -1095,8 +1174,8 @@ function togglePriorAward(context) {
             var req = REQUIREMENTS[lv];
             html += '<div class="prior-inputs-grid">';
             // Service
-            html += '<div class="prior-input-item"><label>Service Hours (max ' + req.vps.hours + ')</label>';
-            html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-vps" min="0" max="' + req.vps.hours + '" step="0.25" value="' + (saved.vps || 0) + '"></div>';
+            html += '<div class="prior-input-item"><label>Service Hours</label>';
+            html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-vps" min="0" step="0.25" value="' + (saved.vps || 0) + '"></div>';
             if (req.vps.months > 0) {
                 html += '<div class="prior-input-item"><label>Service Months (max ' + req.vps.months + ')</label>';
                 html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-vps-months" min="0" max="' + req.vps.months + '" step="1" value="' + (saved.vpsMonths || 0) + '"></div>';
@@ -1105,8 +1184,8 @@ function togglePriorAward(context) {
                 html += '<input type="hidden" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-vps-months" value="0">';
             }
             // Development
-            html += '<div class="prior-input-item"><label>Development Hours (max ' + req.pd.hours + ')</label>';
-            html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pd" min="0" max="' + req.pd.hours + '" step="0.25" value="' + (saved.pd || 0) + '"></div>';
+            html += '<div class="prior-input-item"><label>Development Hours</label>';
+            html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pd" min="0" step="0.25" value="' + (saved.pd || 0) + '"></div>';
             if (req.pd.months > 0) {
                 html += '<div class="prior-input-item"><label>Development Months (max ' + req.pd.months + ')</label>';
                 html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pd-months" min="0" max="' + req.pd.months + '" step="1" value="' + (saved.pdMonths || 0) + '"></div>';
@@ -1115,8 +1194,8 @@ function togglePriorAward(context) {
                 html += '<input type="hidden" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pd-months" value="0">';
             }
             // Fitness
-            html += '<div class="prior-input-item"><label>Fitness Hours (max ' + req.pf.hours + ')</label>';
-            html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pf" min="0" max="' + req.pf.hours + '" step="0.25" value="' + (saved.pf || 0) + '"></div>';
+            html += '<div class="prior-input-item"><label>Fitness Hours</label>';
+            html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pf" min="0" step="0.25" value="' + (saved.pf || 0) + '"></div>';
             if (req.pf.months > 0) {
                 html += '<div class="prior-input-item"><label>Fitness Months (max ' + req.pf.months + ')</label>';
                 html += '<input type="number" class="input-field prior-input" id="prior-' + context + '-' + lv.replace(/\s/g,'_') + '-pf-months" min="0" max="' + req.pf.months + '" step="1" value="' + (saved.pfMonths || 0) + '"></div>';
