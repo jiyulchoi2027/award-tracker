@@ -986,7 +986,7 @@ function renderGoals(category) {
 }
 
 // ── Tab Navigation ──
-function showTab(tab) {
+function showTab(tab, fromPopState) {
     // 모든 탭 콘텐츠 숨기기
     document.querySelectorAll('.tab-content').forEach(function(el) {
         el.classList.remove('active');
@@ -1000,6 +1000,10 @@ function showTab(tab) {
     document.getElementById('tab-' + tab).classList.add('active');
     // 현재 탭 localStorage에 저장 (새로고침 후 복원)
     localStorage.setItem('activeTab', tab);
+    // 뒤로가기 히스토리 쌓기 (popstate로 호출된 경우 제외)
+    if (!fromPopState) {
+        history.pushState({ screen: 'main', tab: tab }, '', '');
+    }
 }
 
 // 로그 접기/펼치기
@@ -1487,7 +1491,7 @@ document.addEventListener('click', function(e) {
 // type="module" 로드 완료 후 사용 가능
 
 // ── 화면 전환 헬퍼 ──
-function showScreen(screenId) {
+function showScreen(screenId, fromPopState) {
     ['splash-screen','login-screen','setup-screen','main-screen'].forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.style.display = 'none';
@@ -1499,6 +1503,10 @@ function showScreen(screenId) {
         target.style.display = 'block';
     } else {
         target.style.display = 'flex';
+    }
+    // 히스토리 쌓기 (splash 제외, popstate 호출 제외)
+    if (!fromPopState && screenId !== 'splash-screen') {
+        history.pushState({ screen: screenId }, '', '');
     }
 }
 
@@ -1798,4 +1806,50 @@ window.addEventListener('load', function() {
             }
         });
     }, 500);
+});
+
+// ── 뒤로가기(Back) 버튼 처리 ──
+window.addEventListener('popstate', function(e) {
+    var state = e.state;
+
+    // 열려있는 모달 닫기 (모달이 있으면 먼저 닫음)
+    var modals = document.querySelectorAll('.modal-overlay');
+    var modalOpen = false;
+    modals.forEach(function(m) {
+        if (m.style.display === 'flex') {
+            m.style.display = 'none';
+            modalOpen = true;
+        }
+    });
+    if (modalOpen) {
+        // 모달 닫은 후 현재 상태 다시 push (앱 종료 방지)
+        history.pushState(state || {}, '', '');
+        return;
+    }
+
+    if (!state) {
+        // 히스토리 바닥 → 앱 종료 방지: 현재 상태 다시 push
+        var currentTab = localStorage.getItem('activeTab') || 'vps';
+        history.pushState({ screen: 'main', tab: currentTab }, '', '');
+        return;
+    }
+
+    if (state.screen === 'main' && state.tab) {
+        // 탭 뒤로가기
+        showTab(state.tab, true);
+    } else if (state.screen === 'login-screen') {
+        showScreen('login-screen', true);
+    } else if (state.screen === 'setup-screen') {
+        showScreen('setup-screen', true);
+    } else {
+        // 알 수 없는 상태 → 현재 유지
+        history.pushState(state, '', '');
+    }
+});
+
+// 앱 시작 시 초기 히스토리 상태 설정
+window.addEventListener('load', function() {
+    if (!history.state) {
+        history.replaceState({ screen: 'splash-screen' }, '', '');
+    }
 });
