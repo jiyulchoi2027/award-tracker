@@ -3,7 +3,7 @@
 // ════════════════════════════════════════════
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged,
+import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signOut, onAuthStateChanged,
          createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail }
     from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
@@ -45,6 +45,19 @@ async function signInWithGoogle() {
     }
 }
 
+// Apple 로그인
+async function signInWithApple() {
+    try {
+        const appleProvider = new OAuthProvider('apple.com');
+        appleProvider.addScope('email');
+        appleProvider.addScope('name');
+        const result = await signInWithPopup(auth, appleProvider);
+        return result.user;
+    } catch (e) {
+        console.error('Apple Login failed:', e);
+        throw e;
+    }
+}
 // 로그아웃
 async function signOutUser() {
     try {
@@ -150,7 +163,7 @@ async function resetPassword(email) {
 
 window.FB = {
     auth, db,
-    signInWithGoogle, signOutUser, onAuthChange,
+    signInWithGoogle, signInWithApple, signOutUser, onAuthChange,
     signUpWithEmail, signInWithEmail, resetPassword,
     saveProfile, loadProfile,
     saveLevelData, loadLevelData,
