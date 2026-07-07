@@ -986,7 +986,7 @@ function renderGoals(category) {
 }
 
 // ── Tab Navigation ──
-function showTab(tab) {
+function showTab(tab, fromPopState) {
     // 모든 탭 콘텐츠 숨기기
     document.querySelectorAll('.tab-content').forEach(function(el) {
         el.classList.remove('active');
@@ -1000,6 +1000,10 @@ function showTab(tab) {
     document.getElementById('tab-' + tab).classList.add('active');
     // 현재 탭 localStorage에 저장 (새로고침 후 복원)
     localStorage.setItem('activeTab', tab);
+    // 뒤로가기 히스토리 쌓기 (popstate로 호출된 경우 제외)
+    if (!fromPopState) {
+        history.pushState({ screen: 'main', tab: tab }, '', '');
+    }
 }
 
 // 로그 접기/펼치기
@@ -1487,7 +1491,7 @@ document.addEventListener('click', function(e) {
 // type="module" 로드 완료 후 사용 가능
 
 // ── 화면 전환 헬퍼 ──
-function showScreen(screenId) {
+function showScreen(screenId, fromPopState) {
     ['splash-screen','login-screen','setup-screen','main-screen'].forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.style.display = 'none';
@@ -1499,6 +1503,10 @@ function showScreen(screenId) {
         target.style.display = 'block';
     } else {
         target.style.display = 'flex';
+    }
+    // 히스토리 쌓기 (splash 제외, popstate 호출 제외)
+    if (!fromPopState && screenId !== 'splash-screen') {
+        history.pushState({ screen: screenId }, '', '');
     }
 }
 
@@ -1620,6 +1628,26 @@ async function handleGoogleSignIn() {
     }
 }
 
+// Apple 로그인
+async function handleAppleSignIn() {
+    var btn = document.querySelector('.apple-signin-btn');
+    var keepSignedIn = document.getElementById('keep-signed-in');
+    var shouldKeep = keepSignedIn ? keepSignedIn.checked : true;
+
+    localStorage.setItem('keepSignedIn', shouldKeep ? 'true' : 'false');
+
+    if (btn) { btn.disabled = true; btn.textContent = 'Signing in...'; }
+    try {
+        var user = await window.FB.signInWithApple();
+        await loadUserData(user);
+    } catch(e) {
+        alert('Apple Sign in failed. Please try again.');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 814 1000" fill="white"><path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 790.7 0 663 0 541.8c0-207.5 135.4-317.3 269-317.3 71 0 130.5 46.4 175 46.4 42.8 0 109.9-49 192.5-49 31 0 111.3 2.6 168.4 81z"/><path d="M554.1 88.4c-15.9 74.1-75.4 133.6-137 133.6-3.2 0-6.5-.3-9.7-.6-3.2-38.2 12.3-79.2 35.9-107.6 26.9-32.6 78.3-58.2 122.5-61.6 3.2 0 6.4-.3 9.7-.3 3.2 26.9-.3 53.8-21.4 36.5z"/></svg> Sign in with Apple';
+        }
+    }
+}
 // ── 로그아웃 ──
 async function handleSignOut() {
     if (!confirm('Sign out of Award Compass?')) return;
@@ -1798,4 +1826,50 @@ window.addEventListener('load', function() {
             }
         });
     }, 500);
+});
+
+// ── 뒤로가기(Back) 버튼 처리 ──
+window.addEventListener('popstate', function(e) {
+    var state = e.state;
+
+    // 열려있는 모달 닫기 (모달이 있으면 먼저 닫음)
+    var modals = document.querySelectorAll('.modal-overlay');
+    var modalOpen = false;
+    modals.forEach(function(m) {
+        if (m.style.display === 'flex') {
+            m.style.display = 'none';
+            modalOpen = true;
+        }
+    });
+    if (modalOpen) {
+        // 모달 닫은 후 현재 상태 다시 push (앱 종료 방지)
+        history.pushState(state || {}, '', '');
+        return;
+    }
+
+    if (!state) {
+        // 히스토리 바닥 → 앱 종료 방지: 현재 상태 다시 push
+        var currentTab = localStorage.getItem('activeTab') || 'vps';
+        history.pushState({ screen: 'main', tab: currentTab }, '', '');
+        return;
+    }
+
+    if (state.screen === 'main' && state.tab) {
+        // 탭 뒤로가기
+        showTab(state.tab, true);
+    } else if (state.screen === 'login-screen') {
+        showScreen('login-screen', true);
+    } else if (state.screen === 'setup-screen') {
+        showScreen('setup-screen', true);
+    } else {
+        // 알 수 없는 상태 → 현재 유지
+        history.pushState(state, '', '');
+    }
+});
+
+// 앱 시작 시 초기 히스토리 상태 설정
+window.addEventListener('load', function() {
+    if (!history.state) {
+        history.replaceState({ screen: 'splash-screen' }, '', '');
+    }
 });

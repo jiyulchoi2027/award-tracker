@@ -1,0 +1,10 @@
+
+# Android build
+build/
+.gradle/
+*.aab
+*.apk
+local.properties
+android.keystore
+manifest-checksum.txt
+store_icon.png
