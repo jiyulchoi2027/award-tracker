@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Award Compass - Support</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: #0d1b2a;
+    color: #f0f0f0;
+    line-height: 1.7;
+    padding: 40px 20px;
+  }
+  .container {
+    max-width: 640px;
+    margin: 0 auto;
+    background: #142f4c;
+    border-radius: 16px;
+    padding: 40px 32px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+  .top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .logo-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #d4af37;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #0d1b2a;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .lang-toggle {
+    display: flex;
+    gap: 6px;
+    background: rgba(255,255,255,0.08);
+    padding: 4px;
+    border-radius: 8px;
+  }
+  .lang-btn {
+    border: none;
+    background: transparent;
+    color: #b8c4d1;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .lang-btn.active {
+    background: #d4af37;
+    color: #0d1b2a;
+  }
+  h2 {
+    font-size: 18px;
+    margin-top: 32px;
+    margin-bottom: 12px;
+    color: #d4af37;
+  }
+  p {
+    color: #dbe4ee;
+    margin-bottom: 12px;
+  }
+  a.email-link {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 12px 20px;
+    background: #d4af37;
+    color: #0d1b2a;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+  }
+  a.email-link:hover {
+    background: #e6c458;
+  }
+  .faq-item {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .faq-item:last-child {
+    border-bottom: none;
+  }
+  .faq-q {
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .faq-a {
+    color: #b8c4d1;
+    font-size: 15px;
+  }
+  footer {
+    margin-top: 40px;
+    font-size: 13px;
+    color: #7a8b9c;
+    text-align: center;
+  }
+  footer a {
+    color: #d4af37;
+    text-decoration: none;
+  }
+  [data-lang="en"] { display: none; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="top-row">
+      <div class="logo-row">
+        <div class="logo-circle">AC</div>
+        <h1>Award Compass Support</h1>
+      </div>
+      <div class="lang-toggle">
+        <button class="lang-btn active" id="btn-ko" onclick="setLang('ko')">한국어</button>
+        <button class="lang-btn" id="btn-en" onclick="setLang('en')">English</button>
+      </div>
+    </div>
+
+    <!-- Korean -->
+    <div data-lang="ko">
+      <p>Award Compass를 이용해 주셔서 감사합니다. 앱 이용 중 궁금한 점이나 문제가 있으시면 아래 방법으로 문의해 주세요.</p>
+
+      <h2>문의하기</h2>
+      <p>이메일로 문의 주시면 최대한 빠르게 답변드리겠습니다.</p>
+      <a class="email-link" href="mailto:jiyulchoi0910@gmail.com">jiyulchoi0910@gmail.com</a>
+
+      <h2>자주 묻는 질문</h2>
+
+      <div class="faq-item">
+        <div class="faq-q">로그인이 안 돼요.</div>
+        <div class="faq-a">Google 또는 Apple 계정으로 로그인할 수 있습니다. 인터넷 연결 상태를 확인하시고, 문제가 계속되면 위 이메일로 기기 종류와 iOS/Android 버전을 함께 보내주세요.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">봉사활동 기록이 저장되지 않아요.</div>
+        <div class="faq-a">앱을 최신 버전으로 업데이트한 후 다시 시도해 주세요. 문제가 지속되면 이메일로 문의해 주시면 확인 후 답변드리겠습니다.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">계정을 삭제하고 싶어요.</div>
+        <div class="faq-a">위 이메일로 계정 삭제를 요청해 주시면 처리해 드립니다.</div>
+      </div>
+
+      <footer>
+        Award Compass &middot; <a href="https://jiyulchoi2027.github.io/award-tracker/">앱으로 돌아가기</a>
+      </footer>
+    </div>
+
+    <!-- English -->
+    <div data-lang="en">
+      <p>Thank you for using Award Compass. If you have any questions or run into issues while using the app, please reach out using the information below.</p>
+
+      <h2>Contact Us</h2>
+      <p>Send us an email and we'll get back to you as soon as possible.</p>
+      <a class="email-link" href="mailto:jiyulchoi0910@gmail.com">jiyulchoi0910@gmail.com</a>
+
+      <h2>Frequently Asked Questions</h2>
+
+      <div class="faq-item">
+        <div class="faq-q">I can't log in.</div>
+        <div class="faq-a">You can sign in with your Google or Apple account. Please check your internet connection. If the issue persists, email us with your device type and iOS/Android version.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">My volunteer activity records aren't saving.</div>
+        <div class="faq-a">Please update the app to the latest version and try again. If the problem continues, contact us by email and we'll look into it.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">I'd like to delete my account.</div>
+        <div class="faq-a">Please email us to request account deletion, and we'll process it for you.</div>
+      </div>
+
+      <footer>
+        Award Compass &middot; <a href="https://jiyulchoi2027.github.io/award-tracker/">Back to app</a>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    function setLang(lang) {
+      document.querySelectorAll('[data-lang]').forEach(el => {
+        el.style.display = (el.getAttribute('data-lang') === lang) ? 'block' : 'none';
+      });
+      document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    }
+
+    // Apple 리뷰어 등 영어권 방문자는 자동으로 영어로 표시
+    const browserLang = navigator.language || navigator.userLanguage;
+    if (!browserLang.toLowerCase().startsWith('ko')) {
+      setLang('en');
+    }
+  </script>
+</body>
+</html>
