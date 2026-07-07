@@ -1,0 +1,11 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "io.github.jiyulchoi2027.twa",
+      "sha256_cert_fingerprints":
+      ["A9:53:33:73:42:33:9C:7F:1F:FB:4C:38:94:93:89:19:7F:1C:2D:3C:B9:47:FC:B4:75:91:6B:8F:12:B9:2D:08"]
+    }
+  }
+]
