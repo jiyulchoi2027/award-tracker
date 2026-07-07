@@ -3,7 +3,7 @@
 // ════════════════════════════════════════════
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
-import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signOut, onAuthStateChanged,
+import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged,
          createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail }
     from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
@@ -34,30 +34,46 @@ let currentUid = null;
 // Auth 함수
 // ════════════════════════════════════════════
 
-// Google 로그인
+// Google 로그인 (redirect 방식 — iOS WebView/Safari 호환)
 async function signInWithGoogle() {
     try {
-        const result = await signInWithPopup(auth, provider);
-        return result.user;
+        await signInWithRedirect(auth, provider);
+        // redirect 방식은 즉시 결과를 반환하지 않음.
+        // 로그인 후 페이지가 다시 로드되면 handleRedirectResult()에서 결과를 받음.
     } catch (e) {
         console.error('Login failed:', e);
         throw e;
     }
 }
 
-// Apple 로그인
+// Apple 로그인 (redirect 방식)
 async function signInWithApple() {
     try {
         const appleProvider = new OAuthProvider('apple.com');
         appleProvider.addScope('email');
         appleProvider.addScope('name');
-        const result = await signInWithPopup(auth, appleProvider);
-        return result.user;
+        await signInWithRedirect(auth, appleProvider);
     } catch (e) {
         console.error('Apple Login failed:', e);
         throw e;
     }
 }
+
+// redirect 로그인 결과 처리 — 앱 로드 시 반드시 호출 필요
+async function handleRedirectResult() {
+    try {
+        const result = await getRedirectResult(auth);
+        if (result && result.user) {
+            currentUid = result.user.uid;
+            return result.user;
+        }
+        return null;
+    } catch (e) {
+        console.error('Redirect result error:', e);
+        return null;
+    }
+}
+
 // 로그아웃
 async function signOutUser() {
     try {
@@ -164,6 +180,7 @@ async function resetPassword(email) {
 window.FB = {
     auth, db,
     signInWithGoogle, signInWithApple, signOutUser, onAuthChange,
+    handleRedirectResult,
     signUpWithEmail, signInWithEmail, resetPassword,
     saveProfile, loadProfile,
     saveLevelData, loadLevelData,

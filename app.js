@@ -1788,12 +1788,26 @@ startApp = async function() {
 window.addEventListener('load', function() {
     // firebase.js가 type="module"이라 약간 늦게 로드됨
     // splash 종료(3.8s) 후 FB 객체 사용
-    setTimeout(function() {
+    setTimeout(async function() {
         if (!window.FB) {
             // Firebase 로드 실패 → localStorage 폴백
             console.warn('Firebase not loaded, falling back to localStorage');
             return;
         }
+
+        // ── Redirect 로그인 결과 처리 (Google/Apple 로그인 후 페이지가 돌아왔을 때) ──
+        try {
+            var redirectUser = await window.FB.handleRedirectResult();
+            if (redirectUser) {
+                if (localStorage.getItem('keepSignedIn') === null) {
+                    localStorage.setItem('keepSignedIn', 'true');
+                }
+            }
+        } catch (e) {
+            console.error('Redirect sign-in failed:', e);
+            alert('Sign in failed. Please try again.');
+        }
+
         window.FB.onAuthChange(function(user) {
             if (user) {
                 // 수동 로그아웃 플래그 체크
