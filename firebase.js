@@ -13,7 +13,7 @@ import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
 // ── Firebase Config ──
 const firebaseConfig = {
     apiKey:            "AIzaSyCloXw1NmF8kbvNxExX9-_D7KE5MnS1SA8",
-    authDomain:        "award-compass.firebaseapp.com",
+    authDomain:        "awardcompass.org",
     projectId:         "award-compass",
     storageBucket:     "award-compass.firebasestorage.app",
     messagingSenderId: "626003001276",
