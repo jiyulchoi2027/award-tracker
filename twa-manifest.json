@@ -1,6 +1,6 @@
-{
+﻿{
   "packageId": "io.github.jiyulchoi2027.twa",
-  "host": "jiyulchoi2027.github.io",
+  "host": "awardcompass.org",
   "name": "Award Compass",
   "launcherName": "AwardCompass",
   "display": "standalone",
@@ -12,19 +12,19 @@
   "navigationDividerColorDark": "#000000",
   "backgroundColor": "#1A3A6B",
   "enableNotifications": true,
-  "startUrl": "/award-tracker/",
-  "iconUrl": "https://jiyulchoi2027.github.io/award-tracker/icons/icon-512.png",
-  "maskableIconUrl": "https://jiyulchoi2027.github.io/award-tracker/icons/icon-512.png",
+  "startUrl": "/",
+  "iconUrl": "https://awardcompass.org/icons/icon-512.png",
+  "maskableIconUrl": "https://awardcompass.org/icons/icon-512.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
-    "path": "C:\\Users\\gamei\\OneDrive\\바탕 화면\\award-tracker\\android.keystore",
+    "path": "C:\\award-tracker\\android.keystore",
     "alias": "android"
   },
-  "appVersionName": "2",
-  "appVersionCode": 2,
+  "appVersionName": "3",
+  "appVersionCode": 3,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "https://jiyulchoi2027.github.io/award-tracker/manifest.json",
+  "webManifestUrl": "https://awardcompass.org/manifest.json",
   "fallbackType": "customtabs",
   "features": {},
   "alphaDependencies": {
@@ -33,7 +33,7 @@
   "enableSiteSettingsShortcut": true,
   "isChromeOSOnly": false,
   "isMetaQuest": false,
-  "fullScopeUrl": "https://jiyulchoi2027.github.io/award-tracker/",
+  "fullScopeUrl": "https://awardcompass.org/",
   "minSdkVersion": 21,
   "orientation": "portrait",
   "fingerprints": [],
@@ -43,5 +43,5 @@
   "fileHandlers": [],
   "launchHandlerClientMode": "",
   "displayOverride": [],
-  "appVersion": "2"
+  "appVersion": "3"
 }
