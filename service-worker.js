@@ -1,12 +1,12 @@
-// ── Award Compass Service Worker ──
-const CACHE_NAME = 'award-compass-v1';
+// Award Compass Service Worker
+const CACHE_NAME = 'award-compass-v2';
 const URLS = [
-    '/award-tracker/',
-    '/award-tracker/index.html',
-    '/award-tracker/app.js',
-    '/award-tracker/style.css',
-    '/award-tracker/icons/icon-192.png',
-    '/award-tracker/icons/icon-512.png'
+    '/',
+    '/index.html',
+    '/app.js',
+    '/style.css',
+    '/icons/icon-192.png',
+    '/icons/icon-512.png'
 ];
 
 // 설치: 핵심 파일 캐시
@@ -19,7 +19,7 @@ self.addEventListener('install', function(e) {
     self.skipWaiting();
 });
 
-// 활성화: 이전 캐시 삭제
+// 활성화: 이전 캐시 전부 삭제
 self.addEventListener('activate', function(e) {
     e.waitUntil(
         caches.keys().then(function(keys) {
@@ -32,17 +32,22 @@ self.addEventListener('activate', function(e) {
     self.clients.claim();
 });
 
-// 요청: 캐시 우선, 없으면 네트워크
+// 요청: 네트워크 우선, 실패 시에만 캐시 사용
 self.addEventListener('fetch', function(e) {
-    // Firebase/Firestore 요청은 캐시 안 함
     if (e.request.url.includes('firestore') ||
         e.request.url.includes('firebase') ||
         e.request.url.includes('googleapis')) {
         return;
     }
     e.respondWith(
-        caches.match(e.request).then(function(cached) {
-            return cached || fetch(e.request);
+        fetch(e.request).then(function(response) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then(function(cache) {
+                cache.put(e.request, clone);
+            });
+            return response;
+        }).catch(function() {
+            return caches.match(e.request);
         })
     );
 });
