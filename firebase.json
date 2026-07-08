@@ -9,7 +9,6 @@
       "app/**",
       "build/**",
       "gradle/**",
-      "icons/**",
       "android.keystore",
       "gradlew",
       "gradlew.bat",
