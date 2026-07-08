@@ -34,9 +34,10 @@
         \"relation\": [\"delegate_permission/common.handle_all_urls\"],
         \"target\": {
             \"namespace\": \"web\",
-            \"site\": \"https://jiyulchoi2027.github.io\"
+            \"site\": \"https://awardcompass.org\"
         }
     }]
     
   </string>  
+<string name="hostName">awardcompass.org</string>
 </resources>

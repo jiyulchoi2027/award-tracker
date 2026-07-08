@@ -22,8 +22,8 @@ plugins {
 
 def twaManifest = [
     applicationId: 'io.github.jiyulchoi2027.twa',
-    hostName: 'jiyulchoi2027.github.io', // The domain being opened in the TWA.
-    launchUrl: '/award-tracker/', // The start path for the TWA. Must be relative to the domain.
+    hostName: 'awardcompass.org', // The domain being opened in the TWA.
+    launchUrl: '/', // The start path for the TWA. Must be relative to the domain.
     name: 'Award Compass', // The application name.
     launcherName: 'AwardCompass', // The name shown on the Android Launcher.
     themeColor: '#1A3A6B', // The color used for the status bar.
@@ -57,8 +57,8 @@ android {
         applicationId "io.github.jiyulchoi2027.twa"
         minSdkVersion 21
         targetSdkVersion 35
-        versionCode 2
-        versionName "2"
+        versionCode 5
+        versionName "5"
 
         // The name for the application
         resValue "string", "appName", twaManifest.name
@@ -76,12 +76,12 @@ android {
             // The URL the Web Manifest for the Progressive Web App that the TWA points to. This
             // is used by Chrome OS and Meta Quest to open the Web version of the PWA instead of
             // the TWA, as it will probably give a better user experience for non-mobile devices.
-            resValue "string", "webManifestUrl", 'https://jiyulchoi2027.github.io/award-tracker/manifest.json'
+            resValue "string", "webManifestUrl", 'https://awardcompass.org/manifest.json'
         
 
         
             // This is used by Meta Quest.
-            resValue "string", "fullScopeUrl", 'https://jiyulchoi2027.github.io/award-tracker/'
+            resValue "string", "fullScopeUrl", 'https://awardcompass.org/'
         
 
         
