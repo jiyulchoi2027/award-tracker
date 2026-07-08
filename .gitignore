@@ -8,3 +8,5 @@ local.properties
 android.keystore
 manifest-checksum.txt
 store_icon.png
+
+.firebase/

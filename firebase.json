@@ -1,0 +1,24 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "app/**",
+      "build/**",
+      "gradle/**",
+      "icons/**",
+      "android.keystore",
+      "gradlew",
+      "gradlew.bat",
+      "build.gradle",
+      "settings.gradle",
+      "gradle.properties",
+      "local.properties",
+      "manifest-checksum.txt",
+      "manifest.json",
+      "twa-manifest.json"
+    ]
+  }
+}
