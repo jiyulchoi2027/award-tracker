@@ -18,7 +18,6 @@
       "gradle.properties",
       "local.properties",
       "manifest-checksum.txt",
-      "manifest.json",
       "twa-manifest.json"
     ]
   }
