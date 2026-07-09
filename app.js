@@ -1846,6 +1846,14 @@ window.addEventListener('load', function() {
 window.addEventListener('popstate', function(e) {
     var state = e.state;
 
+    // 가이드 오버레이가 열려있으면 먼저 닫기
+    var guideEl = document.getElementById('guide-overlay');
+    if (guideEl && guideEl.style.display !== 'none') {
+        closeGuide();
+        history.pushState(state || {}, '', '');
+        return;
+    }
+
     // 열려있는 모달 닫기 (모달이 있으면 먼저 닫음)
     var modals = document.querySelectorAll('.modal-overlay');
     var modalOpen = false;
@@ -1860,11 +1868,14 @@ window.addEventListener('popstate', function(e) {
         history.pushState(state || {}, '', '');
         return;
     }
-
     if (!state) {
-        // 히스토리 바닥 → 앱 종료 방지: 현재 상태 다시 push
-        var currentTab = localStorage.getItem('activeTab') || 'vps';
-        history.pushState({ screen: 'main', tab: currentTab }, '', '');
+        // 히스토리 바닥 → 앱 종료 확인
+        if (confirm('앱을 종료하시겠습니까?')) {
+            history.back();
+        } else {
+            var currentTab = localStorage.getItem('activeTab') || 'vps';
+            history.pushState({ screen: 'main', tab: currentTab }, '', '');
+        }
         return;
     }
 
