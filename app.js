@@ -1504,10 +1504,10 @@ function showScreen(screenId, fromPopState) {
     } else {
         target.style.display = 'flex';
     }
-    // 히스토리 쌓기 (splash 제외, popstate 호출 제외)
-    if (!fromPopState && screenId !== 'splash-screen') {
-        history.pushState({ screen: screenId }, '', '');
-    }
+    // 히스토리 쌓기 (splash, main-screen 제외 — main-screen은 showTab이 히스토리 관리, popstate 호출 제외)
+if (!fromPopState && screenId !== 'splash-screen' && screenId !== 'main-screen') {
+    history.pushState({ screen: screenId }, '', '');
+}
 }
 
 // ── Google 로그인 ──
