@@ -4,7 +4,7 @@
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js';
 import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged,
-         createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail }
+         createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, deleteUser }
     from 'https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
          collection, getDocs, writeBatch }
@@ -156,6 +156,36 @@ async function loadAllLevels(uid) {
     return snap.docs.map(function(d) { return d.id; });
 }
 
+// ════════════════════════════════════════════
+// 계정 삭제 (Apple Guideline 5.1.1(v) 대응)
+// ════════════════════════════════════════════
+
+// Firestore에 저장된 유저 데이터 전체 삭제 (meta/profile + 모든 레벨의 goals/trips/settings)
+async function deleteAllUserData(uid) {
+    const batch = writeBatch(db);
+
+    const levels = await loadAllLevels(uid);
+    levels.forEach(function(levelName) {
+        ['goals', 'trips', 'settings'].forEach(function(type) {
+            batch.delete(levelDataRef(uid, levelName, type));
+        });
+    });
+
+    batch.delete(profileRef(uid));
+
+    await batch.commit();
+}
+
+// 계정 완전 삭제: Firestore 데이터 삭제 → Firebase Auth 계정 삭제
+// 최근 로그인이 아니면 'auth/requires-recent-login' 에러가 throw됨 (호출부에서 처리)
+async function deleteUserAccount() {
+    const user = auth.currentUser;
+    if (!user) throw new Error('No signed-in user');
+
+    await deleteAllUserData(user.uid);
+    await deleteUser(user);
+}
+
 // Email/Password 회원가입
 async function signUpWithEmail(email, password) {
     const result = await createUserWithEmailAndPassword(auth, email, password);
@@ -185,5 +215,6 @@ window.FB = {
     saveProfile, loadProfile,
     saveLevelData, loadLevelData,
     loadAllLevels,
+    deleteUserAccount,
     getCurrentUid: function() { return currentUid; }
 };

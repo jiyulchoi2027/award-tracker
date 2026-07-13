@@ -1370,17 +1370,25 @@ async function saveSettings() {
 }
 
 async function resetAllData() {
-    if (confirm('⚠️ This will permanently delete ALL your data.\n\nAre you sure?')) {
-        if (confirm('Last warning — delete everything and start over?')) {
-            // Firebase 로그아웃 먼저
-            if (window.FB) {
-                try { await window.FB.signOutUser(); } catch(e) { console.warn('signOut error:', e); }
+    if (!confirm('⚠️ This will permanently delete your account and ALL your data.\n\nThis cannot be undone. Are you sure?')) return;
+    if (!confirm('Last warning — permanently delete your account and all data?')) return;
+
+    if (window.FB && window.FB.getCurrentUid()) {
+        try {
+            await window.FB.deleteUserAccount();
+        } catch (e) {
+            if (e.code === 'auth/requires-recent-login') {
+                alert('For your security, Apple requires a recent sign-in to delete your account.\n\nPlease sign out, sign back in, and try deleting your account again right away.');
+                return;
             }
-            localStorage.clear();
-            // 페이지 리로드로 완전 초기화 (로그인 화면으로 이동)
-            window.location.reload();
+            console.error('Account deletion failed:', e);
+            alert('Failed to delete account. Please try again or contact support.');
+            return;
         }
     }
+
+    localStorage.clear();
+    window.location.reload();
 }
 
 // ════════════════════════════════════════════
@@ -1664,7 +1672,22 @@ async function handleSignOut() {
     // 페이지 리로드로 완전한 초기화 (가장 안전한 방법)
     window.location.reload();
 }
+// Sign in with Apple/Google이 이미 이름을 준 경우, 재입력을 요구하지 않음
+// (Apple Guideline 4 - Sign in with Apple 디자인 요구사항 대응)
+function prefillSetupName(user) {
+    var nameInput = document.getElementById('setup-name');
+    if (!nameInput || !user || !user.displayName) return;
 
+    nameInput.value = user.displayName;
+
+nameInput.style.display = 'none';
+
+    // 입력창 바로 앞에 있는 <label>Your Name</label>만 정확히 숨김 (카드 전체는 건드리지 않음)
+    var label = nameInput.previousElementSibling;
+    if (label && label.tagName === 'LABEL') {
+        label.style.display = 'none';
+    }
+}
 // ── 유저 데이터 불러오기 (로그인 후) ──
 async function loadUserData(user) {
     var uid = user.uid;
@@ -1677,7 +1700,8 @@ async function loadUserData(user) {
         var splash = document.getElementById('splash-screen');
         var splashDone = !splash || splash.getAttribute('data-done') === 'true';
         setTimeout(function() {
-            showScreen('setup-screen');
+        prefillSetupName(user);   
+        showScreen('setup-screen');
         }, splashDone ? 0 : 5000);
         return;
     }
